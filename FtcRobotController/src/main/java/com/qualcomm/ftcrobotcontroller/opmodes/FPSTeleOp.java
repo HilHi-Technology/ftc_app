@@ -19,6 +19,8 @@ public class FPSTeleOp extends OpMode {
     public void init() {
         leftMotor = hardwareMap.dcMotor.get("leftMotor");
         rightMotor = hardwareMap.dcMotor.get("rightMotor");
+        rightMotor.setDirection(DcMotor.Direction.REVERSE);
+
     }
 
     @Override
@@ -33,7 +35,7 @@ public class FPSTeleOp extends OpMode {
         int joy1Up = 2; //Create two psuedo-boolean values, which will be either 0, 1, or 2, representing false, true, or undefined.
         int joy2Left = 2;
 
-        if (joy1Y < 10 && joy1Y > -10 && joy1X > -10 && joy1X < 10) { //If the left, or the power joystick is in the deadzone...
+        if (joy1Y < 0.1 && joy1Y > -0.1 && joy1X > -0.1 && joy1X < 0.1) { //If the left, or the power joystick is in the deadzone...
             motorPower = 0; //Set the motors' power to be 0.
         } else if (joy1Y > 0) { //If the power joystick is forward...
             joy1Up = 1; //Set joy1Up to 1, showing that the left joystick is up.
@@ -41,7 +43,7 @@ public class FPSTeleOp extends OpMode {
             joy1Up = 0; //Set joy1Up to 0, showing that the left joystick is down.
         }
 
-        if (joy2Y < 10 && joy2Y > -10 && joy2X > -10 && joy2X < 10) { //If the right, or the steering joystick is within the deadzone...
+        if (joy2Y < 0.1 && joy2Y > -0.1 && joy2X > -0.1 && joy2X < 0.1) { //If the right, or the steering joystick is within the deadzone...
             motorCurve = 0; //Set the motors' curve to be 0
         } else if (joy2X > 0) { //If the control joystick is not in the deadzone, and it's to the right...
             joy2Left = 0; //Set joy2Left to 0, signifying that the right joystick is right.
@@ -53,20 +55,20 @@ public class FPSTeleOp extends OpMode {
         float motorPowerE = 0;
 
         if (joy1Up == 1 && joy2Left == 1) {
-            motorPowerD = motorPower + motorCurve;
-            motorPowerE = motorPower - motorCurve;
+            motorPowerD = motorPower - motorCurve;
+            motorPowerE = motorPower + motorCurve;
         } else if (joy1Up == 1 && joy2Left == 0) {
-            motorPowerD = motorPower + motorCurve;
-            motorPowerE = motorPower - motorCurve;
+            motorPowerD = motorPower - motorCurve;
+            motorPowerE = motorPower + motorCurve;
         } else if (joy1Up == 0 && joy2Left == 1) {
-            motorPowerD = motorPower + motorCurve;
-            motorPowerE = motorPower - motorCurve;
+            motorPowerD = motorPower - motorCurve;
+            motorPowerE = motorPower + motorCurve;
         } else if (joy1Up == 0 && joy2Left == 0) {
-            motorPowerD = motorPower + motorCurve;
-            motorPowerE = motorPower - motorCurve;
+            motorPowerD = motorPower - motorCurve;
+            motorPowerE = motorPower + motorCurve;
         } else if (joy1Up == 2) {
-            motorPowerD = motorCurve;
-            motorPowerE = -motorCurve;
+            motorPowerD = -motorCurve;
+            motorPowerE = motorCurve;
         } else if (joy2Left == 2) {
             motorPowerD = motorPower;
             motorPowerE = motorPower;
@@ -96,7 +98,11 @@ public class FPSTeleOp extends OpMode {
             motorPowerD = motorPowerD - amountToAdd;
             motorPowerE = motorPowerE - amountToAdd;
         }
-        leftMotor.setPower(motorPowerD);
-        rightMotor.setPower(motorPowerE);
+
+        float motorPowerDFloat = motorPowerD / 100f;
+        float motorPowerEFloat = motorPowerE / 100f;
+
+        leftMotor.setPower(motorPowerDFloat);
+        rightMotor.setPower(motorPowerEFloat);
     }
 }
