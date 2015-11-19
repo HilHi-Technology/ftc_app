@@ -55,20 +55,20 @@ public class FPSTeleOp extends OpMode {
         float motorPowerE = 0;
 
         if (joy1Up == 1 && joy2Left == 1) {
-            motorPowerD = motorPower - motorCurve;
-            motorPowerE = motorPower + motorCurve;
+            motorPowerD = motorPower + motorCurve;
+            motorPowerE = motorPower - motorCurve;
         } else if (joy1Up == 1 && joy2Left == 0) {
-            motorPowerD = motorPower - motorCurve;
-            motorPowerE = motorPower + motorCurve;
+            motorPowerD = motorPower + motorCurve;
+            motorPowerE = motorPower - motorCurve;
         } else if (joy1Up == 0 && joy2Left == 1) {
-            motorPowerD = motorPower - motorCurve;
-            motorPowerE = motorPower + motorCurve;
+            motorPowerD = motorPower + motorCurve;
+            motorPowerE = motorPower - motorCurve;
         } else if (joy1Up == 0 && joy2Left == 0) {
-            motorPowerD = motorPower - motorCurve;
-            motorPowerE = motorPower + motorCurve;
+            motorPowerD = motorPower + motorCurve;
+            motorPowerE = motorPower - motorCurve;
         } else if (joy1Up == 2) {
-            motorPowerD = -motorCurve;
-            motorPowerE = motorCurve;
+            motorPowerD = motorCurve;
+            motorPowerE = -motorCurve;
         } else if (joy2Left == 2) {
             motorPowerD = motorPower;
             motorPowerE = motorPower;
