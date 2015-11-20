@@ -17,8 +17,8 @@ public class FPSTeleOp extends OpMode {
 
     @Override
     public void init() {
-        leftMotor = hardwareMap.dcMotor.get("leftMotor");
-        rightMotor = hardwareMap.dcMotor.get("rightMotor");
+        leftMotor = hardwareMap.dcMotor.get("left");
+        rightMotor = hardwareMap.dcMotor.get("right");
         rightMotor.setDirection(DcMotor.Direction.REVERSE);
 
     }
@@ -32,77 +32,62 @@ public class FPSTeleOp extends OpMode {
 
         float motorPower = joy1Y * 100; //Create variables for storing the motor power and the curve to be applied to the motors.
         float motorCurve = joy2X * 50;
-        int joy1Up = 2; //Create two psuedo-boolean values, which will be either 0, 1, or 2, representing false, true, or undefined.
-        int joy2Left = 2;
+        boolean joy1deadzone = false; //Create two psuedo-boolean values, which will be either 0, 1, or 2, representing false, true, or undefined.
+        boolean joy2deadzone = false;
 
         if (joy1Y < 0.1 && joy1Y > -0.1 && joy1X > -0.1 && joy1X < 0.1) { //If the left, or the power joystick is in the deadzone...
             motorPower = 0; //Set the motors' power to be 0.
-        } else if (joy1Y > 0) { //If the power joystick is forward...
-            joy1Up = 1; //Set joy1Up to 1, showing that the left joystick is up.
-        } else { //If the joystick is not within the deadzone, or being pushed forward, it must be being pulled backwards, in which case...
-            joy1Up = 0; //Set joy1Up to 0, showing that the left joystick is down.
+            joy1deadzone = true;
         }
 
         if (joy2Y < 0.1 && joy2Y > -0.1 && joy2X > -0.1 && joy2X < 0.1) { //If the right, or the steering joystick is within the deadzone...
             motorCurve = 0; //Set the motors' curve to be 0
-        } else if (joy2X > 0) { //If the control joystick is not in the deadzone, and it's to the right...
-            joy2Left = 0; //Set joy2Left to 0, signifying that the right joystick is right.
-        } else if (joy2X < 0) { //If the control joystick is not in the deadzone, nor to the right, it must be to the left, in which case...
-            joy2Left = 1; //Set joy2Left to 1, signifying that the right joystick is to the left.
+            joy2deadzone = true;
         }
 
-        float motorPowerD = 0; //Create variables to store the final values
-        float motorPowerE = 0;
+        float leftMotorPower = 0; //Create variables to store the final values
+        float rightMotorPower = 0;
 
-        if (joy1Up == 1 && joy2Left == 1) {
-            motorPowerD = motorPower + motorCurve;
-            motorPowerE = motorPower - motorCurve;
-        } else if (joy1Up == 1 && joy2Left == 0) {
-            motorPowerD = motorPower + motorCurve;
-            motorPowerE = motorPower - motorCurve;
-        } else if (joy1Up == 0 && joy2Left == 1) {
-            motorPowerD = motorPower + motorCurve;
-            motorPowerE = motorPower - motorCurve;
-        } else if (joy1Up == 0 && joy2Left == 0) {
-            motorPowerD = motorPower + motorCurve;
-            motorPowerE = motorPower - motorCurve;
-        } else if (joy1Up == 2) {
-            motorPowerD = motorCurve;
-            motorPowerE = -motorCurve;
-        } else if (joy2Left == 2) {
-            motorPowerD = motorPower;
-            motorPowerE = motorPower;
-        } else if (joy1Up == 2 && joy2Left == 2) {
-            motorPowerD = 0;
-            motorPowerE = 0;
+        if (!joy1deadzone && !joy2deadzone) {
+            leftMotorPower = motorPower + motorCurve;
+            rightMotorPower = motorPower - motorCurve;
+        } else if (joy1deadzone && joy2deadzone) {
+            leftMotorPower = 0;
+            rightMotorPower = 0;
+        } else if (joy1deadzone) {
+            leftMotorPower = motorCurve;
+            rightMotorPower = -motorCurve;
+        } else if (joy2deadzone) {
+            leftMotorPower = motorPower;
+            rightMotorPower = motorPower;
         }
 
-        if (motorPowerD > 100) {
-            float amountToSubtract = motorPowerD - 100;
-            motorPowerD = motorPowerD - amountToSubtract;
-            motorPowerE = motorPowerE - amountToSubtract;
+        if (leftMotorPower > 100) {
+            float amountToSubtract = leftMotorPower - 100;
+            leftMotorPower = leftMotorPower - amountToSubtract;
+            rightMotorPower = rightMotorPower - amountToSubtract;
         }
-        if (motorPowerE > 100) {
-            float amountToSubtract = motorPowerE - 100;
-            motorPowerD = motorPowerD - amountToSubtract;
-            motorPowerE = motorPowerE - amountToSubtract;
-        }
-
-        if (motorPowerD < -100) {
-            float amountToAdd = motorPowerD + 100;
-            motorPowerD = motorPowerD - amountToAdd;
-            motorPowerE = motorPowerE - amountToAdd;
-        }
-        if (motorPowerE < -100) {
-            float amountToAdd = motorPowerE + 100;
-            motorPowerD = motorPowerD - amountToAdd;
-            motorPowerE = motorPowerE - amountToAdd;
+        if (rightMotorPower > 100) {
+            float amountToSubtract = rightMotorPower - 100;
+            leftMotorPower = leftMotorPower - amountToSubtract;
+            rightMotorPower = rightMotorPower - amountToSubtract;
         }
 
-        float motorPowerDFloat = motorPowerD / 100f;
-        float motorPowerEFloat = motorPowerE / 100f;
+        if (leftMotorPower < -100) {
+            float amountToAdd = leftMotorPower + 100;
+            leftMotorPower = leftMotorPower - amountToAdd;
+            rightMotorPower = rightMotorPower - amountToAdd;
+        }
+        if (rightMotorPower < -100) {
+            float amountToAdd = rightMotorPower + 100;
+            leftMotorPower = leftMotorPower - amountToAdd;
+            rightMotorPower = rightMotorPower - amountToAdd;
+        }
 
-        leftMotor.setPower(motorPowerDFloat);
-        rightMotor.setPower(motorPowerEFloat);
+        float leftMotorPowerFloat = leftMotorPower / 100f;
+        float rightMotorPowerFloat = rightMotorPower / 100f;
+
+        leftMotor.setPower(leftMotorPowerFloat);
+        rightMotor.setPower(rightMotorPowerFloat);
     }
 }
