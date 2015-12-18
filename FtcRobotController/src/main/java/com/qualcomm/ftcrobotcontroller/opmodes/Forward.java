@@ -26,17 +26,9 @@ public class Forward extends LinearOpMode {
 
         newWaitForStart();
 
-        right.setPower(1);
+        goForward(1000);
 
-        try {
-            sleep(1000);
-            left.setPower(1);
-        } catch (Exception e) {
 
-        }
-
-        left.setPower(0);
-        right.setPower(0);
     }
 
     private void goForward(int milliseconds) {

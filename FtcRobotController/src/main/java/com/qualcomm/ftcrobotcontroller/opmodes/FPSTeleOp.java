@@ -2,6 +2,7 @@ package com.qualcomm.ftcrobotcontroller.opmodes;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
 
 /**
  * Created by Jonathan on 9/28/2015.
@@ -10,6 +11,13 @@ public class FPSTeleOp extends OpMode {
 
     DcMotor leftMotor;
     DcMotor rightMotor;
+
+    Servo claw1;
+    Servo claw2;
+
+    private boolean hookDown = false;
+
+    private boolean button1 = false;
 
     public FPSTeleOp() {
 
@@ -21,6 +29,8 @@ public class FPSTeleOp extends OpMode {
         rightMotor = hardwareMap.dcMotor.get("right");
         rightMotor.setDirection(DcMotor.Direction.REVERSE);
 
+        claw1 = hardwareMap.servo.get("servo_1");
+        claw2 = hardwareMap.servo.get("servo_1");
     }
 
     @Override
@@ -89,5 +99,20 @@ public class FPSTeleOp extends OpMode {
 
         leftMotor.setPower(leftMotorPowerFloat);
         rightMotor.setPower(rightMotorPowerFloat);
+
+        if (gamepad1.a) {
+            button1 = true;
+
+            hookDown = !hookDown;
+        } else {
+            button1 = false;
+        }
+        if (hookDown) {
+            claw1.setPosition(0);
+            claw2.setPosition(0);
+        } else {
+            claw1.setPosition(1);
+            claw1.setPosition(1);
+        }
     }
 }
