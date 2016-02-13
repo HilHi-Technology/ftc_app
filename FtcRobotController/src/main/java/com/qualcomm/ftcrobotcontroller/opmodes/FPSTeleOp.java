@@ -54,7 +54,6 @@ public class FPSTeleOp extends OpMode {
         hook2Motor = hardwareMap.dcMotor.get("hook2");
 
         rightMotor.setDirection(DcMotor.Direction.REVERSE);
-        hook1Motor.setDirection(DcMotor.Direction.REVERSE);
 
         leftPusher = hardwareMap.servo.get("leftPusher");
         rightPusher = hardwareMap.servo.get("rightPusher");
