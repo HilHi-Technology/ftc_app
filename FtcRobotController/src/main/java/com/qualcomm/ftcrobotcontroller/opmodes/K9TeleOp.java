@@ -144,7 +144,7 @@ public class K9TeleOp extends OpMode {
 		left = Range.clip(left, -1, 1);
 
 		// scale the joystick value to make it easier to control
-		// the robot more precisely at slower speeds.
+		// the robot more precisely at slower speeds. https://github.com/HilHi-Technology/ftc_app.git
 		right = (float)scaleInput(right);
 		left =  (float)scaleInput(left);
 
