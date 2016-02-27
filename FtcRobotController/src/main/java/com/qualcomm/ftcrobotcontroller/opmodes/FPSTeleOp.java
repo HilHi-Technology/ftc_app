@@ -68,6 +68,7 @@ public class FPSTeleOp extends OpMode {
 
     @Override
     public void loop() {
+
         float joy1Y = gamepad1.left_stick_y;
         float joy1X = gamepad1.left_stick_x;
         float joy2X = gamepad1.right_stick_x;
@@ -199,9 +200,9 @@ public class FPSTeleOp extends OpMode {
         }
 
         if (rightZipDown) {
-            rightZipline.setPosition(1);
-        } else {
             rightZipline.setPosition(0);
+        } else {
+            rightZipline.setPosition(0.9);
         }
 
         if (leftTrigger > 0.2) {
@@ -214,9 +215,9 @@ public class FPSTeleOp extends OpMode {
         }
 
         if (leftZipDown) {
-            leftZipline.setPosition(0);
-        } else {
             leftZipline.setPosition(1);
+        } else {
+            leftZipline.setPosition(0.9);
         }
     }
 }

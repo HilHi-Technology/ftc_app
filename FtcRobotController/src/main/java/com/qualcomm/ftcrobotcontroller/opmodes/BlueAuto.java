@@ -23,7 +23,7 @@ public class BlueAuto extends LinearOpMode {
     }
 
     @Override
-    public void runOpMode() {
+    public void runOpMode() throws InterruptedException {
 
         mapHardware();
 
@@ -101,7 +101,7 @@ public class BlueAuto extends LinearOpMode {
     }
 
 
-    private void goForward (int distance, double power) {
+    private void goForward (int distance, double power) throws InterruptedException {
         right.setTargetPosition(distance);
         left.setTargetPosition(distance);
 
@@ -112,6 +112,7 @@ public class BlueAuto extends LinearOpMode {
         right.setPower(power);
 
         while (Math.abs(right.getCurrentPosition()) < distance) {
+        waitOneFullHardwareCycle();
         }
 
         left.setPower(0);
@@ -122,7 +123,7 @@ public class BlueAuto extends LinearOpMode {
     }
 
 
-    private void goBackward(int distance, double power) {
+    private void goBackward(int distance, double power) throws InterruptedException {
         right.setTargetPosition(-distance);
         left.setTargetPosition(-distance);
 
@@ -133,6 +134,7 @@ public class BlueAuto extends LinearOpMode {
         right.setPower(power);
 
         while (Math.abs(right.getCurrentPosition()) < distance) {
+            waitOneFullHardwareCycle();
         }
 
         left.setPower(0);
@@ -143,7 +145,7 @@ public class BlueAuto extends LinearOpMode {
     }
 
 
-    private void turnRight(int distance, double power) {
+    private void turnRight(int distance, double power) throws InterruptedException {
         right.setTargetPosition(-distance);
         left.setTargetPosition(distance);
 
@@ -154,6 +156,7 @@ public class BlueAuto extends LinearOpMode {
         right.setPower(power);
 
         while (Math.abs(right.getCurrentPosition()) < distance) {
+            waitOneFullHardwareCycle();
         }
 
         left.setPower(0);
@@ -164,7 +167,7 @@ public class BlueAuto extends LinearOpMode {
     }
 
 
-    private void turnLeft(int distance, double power) {
+    private void turnLeft(int distance, double power) throws InterruptedException {
         right.setTargetPosition(distance);
         left.setTargetPosition(-distance);
 
@@ -175,6 +178,7 @@ public class BlueAuto extends LinearOpMode {
         right.setPower(power);
 
         while (Math.abs(right.getCurrentPosition()) < distance) {
+            waitOneFullHardwareCycle();
         }
 
         left.setPower(0);

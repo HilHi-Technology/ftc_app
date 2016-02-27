@@ -96,7 +96,7 @@ public class FtcOpModeRegister implements OpModeRegister {
     manager.register("FPSTeleOp", FPSTeleOp.class);
     manager.register("BlueAuto", BlueAuto.class);
     manager.register("RedAuto", RedAuto.class);
-    manager.register("SuperSimple", SuperSimple.class);
-    manager.register("MRRGBExample", MRRGBExample.class);
+    manager.register("navXDriveStraightPIDLinearOP", navXDriveStraightPIDLinearOp.class);
+    manager.register("navXRotateToAnglePIDLoopOp", navXRotateToAnglePIDLoopOp.class);
   }
 }
