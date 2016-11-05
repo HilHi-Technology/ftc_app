@@ -55,7 +55,7 @@ import static java.lang.Math.abs;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@TeleOp(name="FPSTeleOp", group="Iterative Opmode")  // @Autonomous(...) is the other common choice
+@TeleOp(name="FPSTeleOp", group="Iterative Opmode")  // @RedAutonomous(...) is the other common choice
 public class FPSTeleOp extends OpMode
 {
     /* Declare OpMode members. */
