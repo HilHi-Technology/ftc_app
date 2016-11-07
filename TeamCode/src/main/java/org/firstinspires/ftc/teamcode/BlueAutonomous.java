@@ -70,7 +70,7 @@ public class BlueAutonomous extends LinearOpMode {
          */
         leftMotor  = hardwareMap.dcMotor.get("lm");
         rightMotor = hardwareMap.dcMotor.get("rm");
-        //rightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        rightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // eg: Set the drive motor directions:
         // "Reverse" the motor that runs backwards when connected directly to the battery
@@ -81,18 +81,46 @@ public class BlueAutonomous extends LinearOpMode {
         waitForStart();
         runtime.reset();
 
+        sleep(15000);
+
+        leftMotor.setPower(-0.2);
+        rightMotor.setPower(-1);
+
+        sleep(3500);
+
+        leftMotor.setPower(-1);
+        rightMotor.setPower(-1);
+
+        sleep(500);
+
+        leftMotor.setPower(0);
+        rightMotor.setPower(0);
+
+        sleep(1000);
+
+        leftMotor.setPower(-1);
+        rightMotor.setPower(-1);
+
+        sleep(250);
+
+        leftMotor.setPower(0);
+        rightMotor.setPower(0);
+
+        sleep(250);
+
         leftMotor.setPower(1);
-        rightMotor.setPower(0.175);
-
-        sleep(4000);
-
-        rightMotor.setPower(0.05);
-
-        sleep(1700);
-
-        leftMotor.setPower(0.5);
         rightMotor.setPower(1);
 
-        sleep(2000);
+        sleep(500);
+
+        leftMotor.setPower(0);
+        rightMotor.setPower(1);
+
+        sleep(500);
+
+        leftMotor.setPower(-1);
+        rightMotor.setPower(-1);
+
+        sleep(1500);
     }
 }

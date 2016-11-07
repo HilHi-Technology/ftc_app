@@ -82,18 +82,47 @@ public class RedAutonomous extends LinearOpMode {
         waitForStart();
         runtime.reset();
 
-        leftMotor.setPower(0.175);
-        rightMotor.setPower(1);
+        sleep(15000);
 
-        sleep(4000);
 
-        leftMotor.setPower(0.05);
+        leftMotor.setPower(-1);
+        rightMotor.setPower(-0.25);
 
-        sleep(1700);
+        sleep(3500);
+
+        leftMotor.setPower(-1);
+        rightMotor.setPower(-1);
+
+        sleep(500);
+
+        leftMotor.setPower(0);
+        rightMotor.setPower(0);
+
+        sleep(1000);
+
+        leftMotor.setPower(-1);
+        rightMotor.setPower(-1);
+
+        sleep(250);
+
+        leftMotor.setPower(0);
+        rightMotor.setPower(0);
+
+        sleep(250);
 
         leftMotor.setPower(1);
-        rightMotor.setPower(0.5);
+        rightMotor.setPower(1);
 
-        sleep(2000);
+        sleep(500);
+
+        leftMotor.setPower(1);
+        rightMotor.setPower(0);
+
+        sleep(500);
+
+        leftMotor.setPower(-1);
+        rightMotor.setPower(-1);
+
+        sleep(1500);
     }
 }
