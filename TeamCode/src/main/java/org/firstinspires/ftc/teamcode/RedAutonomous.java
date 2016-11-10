@@ -80,9 +80,12 @@ public class RedAutonomous extends LinearOpMode {
         waitForStart();
         runtime.reset();
 
-        sleep(15000);
+        sleep(1000);
 
-        encoderDrive(0.6,  48,  48, 250);
+        encoderDrive(0.5,  1440,  1440, 1000); //Forward
+        encoderDrive(0.5,  1440,  -1440, 1000); //Right
+        encoderDrive(0.5,  -1440,  1440, 1000); //Left
+        encoderDrive(0.5,  -1440,  -1440, 1000); //Backward
 
     }
 
