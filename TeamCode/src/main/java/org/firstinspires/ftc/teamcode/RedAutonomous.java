@@ -63,67 +63,62 @@ public class RedAutonomous extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        telemetry.addData("Status", "Initialized");
-        telemetry.update();
 
-        /* eg: Initialize the hardware variables. Note that the strings used here as parameters
-         * to 'get' must correspond to the names assigned during the robot configuration
-         * step (using the FTC Robot Controller app on the phone).
-         */
         leftMotor  = hardwareMap.dcMotor.get("lm");
         rightMotor = hardwareMap.dcMotor.get("rm");
         rightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        // eg: Set the drive motor directions:
-        // "Reverse" the motor that runs backwards when connected directly to the battery
-        // leftMotor.setDirection(DcMotor.Direction.FORWARD); // Set to REVERSE if using AndyMark motors
-        // rightMotor.setDirection(DcMotor.Direction.REVERSE);// Set to FORWARD if using AndyMark motors
+        leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-        // Wait for the game to start (driver presses PLAY)
+        leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        telemetry.addData("Status", "Initialized");
+        telemetry.update();
+
         waitForStart();
         runtime.reset();
 
         sleep(15000);
 
+        encoderDrive(0.6,  48,  48, 250);
 
-        leftMotor.setPower(-1);
-        rightMotor.setPower(-0.25);
-
-        sleep(3500);
-
-        leftMotor.setPower(-1);
-        rightMotor.setPower(-1);
-
-        sleep(500);
-
-        leftMotor.setPower(0);
-        rightMotor.setPower(0);
-
-        sleep(1000);
-
-        leftMotor.setPower(-1);
-        rightMotor.setPower(-1);
-
-        sleep(250);
-
-        leftMotor.setPower(0);
-        rightMotor.setPower(0);
-
-        sleep(250);
-
-        leftMotor.setPower(1);
-        rightMotor.setPower(1);
-
-        sleep(500);
-
-        leftMotor.setPower(1);
-        rightMotor.setPower(0);
-
-        sleep(500);
-
-        leftMotor.setPower(-1);
-        rightMotor.setPower(-1);
-
-        sleep(1500);
     }
+
+    public void encoderDrive(double speed, double leftTicks, double rightTicks, double sleepTime) {
+        int newLeftTarget;
+        int newRightTarget;
+
+        if (opModeIsActive()) {
+
+            newLeftTarget = leftMotor.getCurrentPosition() + (int) leftTicks;
+            newRightTarget = rightMotor.getCurrentPosition() + (int) rightTicks;
+            leftMotor.setTargetPosition(newLeftTarget);
+            rightMotor.setTargetPosition(newRightTarget);
+
+            leftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            rightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            runtime.reset();
+            leftMotor.setPower(Math.abs(speed));
+            rightMotor.setPower(Math.abs(speed));
+
+            while (opModeIsActive() && (leftMotor.isBusy() && rightMotor.isBusy())) {
+
+                telemetry.addData("Path1", "Running to %7d :%7d", newLeftTarget, newRightTarget);
+                telemetry.addData("Path2", "Running at %7d :%7d", leftMotor.getCurrentPosition(), rightMotor.getCurrentPosition());
+                telemetry.update();
+            }
+
+            leftMotor.setPower(0);
+            rightMotor.setPower(0);
+
+            leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+            sleep((int) sleepTime);
+        }
+    }
+
 }
