@@ -1,3 +1,4 @@
+// This is now the encoder branch of the RedAutonomous program.
 /*
 Copyright (c) 2016 Robert Atkinson
 
