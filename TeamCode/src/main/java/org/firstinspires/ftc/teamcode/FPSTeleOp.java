@@ -65,7 +65,8 @@ public class FPSTeleOp extends OpMode
     private DcMotor leftMotor = null;
     private DcMotor rightMotor = null;
     private DcMotor sweep = null;
-    private DcMotor spin = null;
+    private DcMotor spin1 = null;
+    private DcMotor spin2 = null;
     private DcMotor arm = null;
 
     private Servo buttonPusher = null;
@@ -82,12 +83,14 @@ public class FPSTeleOp extends OpMode
         leftMotor = hardwareMap.dcMotor.get("lm");
         rightMotor = hardwareMap.dcMotor.get("rm");
         sweep = hardwareMap.dcMotor.get("sweep");
-        spin = hardwareMap.dcMotor.get("spin");
+        spin1 = hardwareMap.dcMotor.get("spin1");
+        spin2 = hardwareMap.dcMotor.get("spin2");
         //rightMotor = hardwareMap.dcMotor.get("arm");
 
-        buttonPusher = hardwareMap.servo.get("bp");
+        //buttonPusher = hardwareMap.servo.get("bp");
 
         rightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        spin1.setDirection(DcMotorSimple.Direction.REVERSE);
 
         /* eg: Initialize the hardware variables. Note that the strings used here as parameters
          * to 'get' must correspond to the names assigned during the robot configuration
@@ -166,11 +169,11 @@ public class FPSTeleOp extends OpMode
         telemetry.addData("ForwardPower", forwardPower);
         telemetry.addData("TurnPower", turnPower);
 
-        if (gamepad1.a) {
-            buttonPusher.setPosition(1);
-        } else {
-            buttonPusher.setPosition(0);
-        }
+        //if (gamepad1.a) {
+          //  buttonPusher.setPosition(1);
+        //} else {
+          //  buttonPusher.setPosition(0);
+        //}
 
         // eg: Run wheels in tank mode (note: The joystick goes negative when pushed forwards)
         // leftMotor.setPower(-gamepad1.left_stick_y);
@@ -186,10 +189,12 @@ public class FPSTeleOp extends OpMode
             sweep.setPower(0);
         }
         if (shootOut) {
-            spin.setPower(1);
+            spin1.setPower(1);
+            spin2.setPower(1);
         }
         else {
-            spin.setPower(0);
+            spin1.setPower(0);
+            spin2.setPower(0);
         }
     }
 }
