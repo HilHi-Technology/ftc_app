@@ -103,10 +103,29 @@ public class BlueAutonomous extends LinearOpMode {
             rightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
             runtime.reset();
-            leftMotor.setPower(Math.abs(speed));
-            rightMotor.setPower(Math.abs(speed));
 
-            while (opModeIsActive() && (leftMotor.isBusy() && rightMotor.isBusy())) {
+            if(leftTicks == 0) {
+                leftMotor.setPower(0);
+                rightMotor.setPower(Math.abs(speed));
+            }
+            else if(rightTicks == 0) {
+                leftMotor.setPower(Math.abs(speed));
+                rightMotor.setPower(Math.abs(0));
+            }
+            else if(leftTicks > rightTicks) {
+                leftMotor.setPower(Math.abs(speed));
+                rightMotor.setPower(Math.abs((rightTicks/leftTicks)*speed));
+            }
+            else if(rightTicks > leftTicks) {
+                leftMotor.setPower(Math.abs((leftTicks/rightTicks)*speed));
+                rightMotor.setPower(Math.abs(speed));
+            }
+            else if(rightTicks == leftTicks) {
+                rightMotor.setPower(speed);
+                leftMotor.setPower(speed);
+            }
+
+            while (opModeIsActive() && (leftMotor.isBusy() || rightMotor.isBusy())) {
 
                 telemetry.addData("Path1", "Running to %7d :%7d", newLeftTarget, newRightTarget);
                 telemetry.addData("Path2", "Running at %7d :%7d", leftMotor.getCurrentPosition(), rightMotor.getCurrentPosition());
