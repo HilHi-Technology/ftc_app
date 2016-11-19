@@ -37,6 +37,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import static java.lang.Math.abs;
@@ -64,6 +65,8 @@ public class FPSTeleOp extends OpMode
     private DcMotor leftMotor = null;
     private DcMotor rightMotor = null;
 
+    private Servo buttonPusher = null;
+
     private final float turnMultiplier = 0.5f;
 
     /*
@@ -75,6 +78,8 @@ public class FPSTeleOp extends OpMode
 
         leftMotor = hardwareMap.dcMotor.get("lm");
         rightMotor = hardwareMap.dcMotor.get("rm");
+
+        buttonPusher = hardwareMap.servo.get("bp");
 
         rightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
@@ -150,6 +155,12 @@ public class FPSTeleOp extends OpMode
 
         telemetry.addData("ForwardPower", forwardPower);
         telemetry.addData("TurnPower", turnPower);
+
+        if (gamepad1.a) {
+            buttonPusher.setPosition(1);
+        } else {
+            buttonPusher.setPosition(0);
+        }
 
         // eg: Run wheels in tank mode (note: The joystick goes negative when pushed forwards)
         // leftMotor.setPower(-gamepad1.left_stick_y);

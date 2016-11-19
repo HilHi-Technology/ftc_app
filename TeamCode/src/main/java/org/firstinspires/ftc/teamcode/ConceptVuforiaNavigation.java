@@ -36,6 +36,9 @@ import com.qualcomm.ftcrobotcontroller.R;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.RobotLog;
 import com.vuforia.HINT;
 import com.vuforia.Vuforia;
@@ -89,7 +92,20 @@ import java.util.List;
 
 @Autonomous(name="Concept: Vuforia Navigation", group ="Concept")
 public class ConceptVuforiaNavigation extends LinearOpMode {
+
+    private ElapsedTime runtime = new ElapsedTime();
+
+    DcMotor leftMotor = null;
+    DcMotor rightMotor = null;
+
     @Override public void runOpMode() {
+
+        telemetry.addData("Status", "Initialized");
+        telemetry.update();
+
+        leftMotor  = hardwareMap.dcMotor.get("lm");
+        rightMotor = hardwareMap.dcMotor.get("rm");
+        leftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
         VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters(R.id.cameraMonitorViewId);
         parameters.vuforiaLicenseKey = "AVpZvhj/////AAAAGS4AanX+yU5toBr4URhwzTlcjMcTgpcgbIoseTYKxBoYxNobI6A5VxrfyfBiSEpEyk0RA0ynCqNIQbnpYg20ufD+Fg1eHR6sB+6BalZhvf6vnigBboPowdl+7k64fnboXbpzez157m7B6Yiegz9uygCQJZiDMzwcyz753xOxnKPh4LGtTaY2ErXJn0e46tNinSqyF5O6PiHyooUQPxleWWbqZ9ygGXspfCy3AqivZfw6OJn5L2l6He3JX89Kxprpi/EMhTYT5NXXzneIKYwjNaf4L0UShuZI3DgzLIx3+2QVIRaAP1X5iuWwMQxrj5BMRnvyRyZrTuGZNOTdPKc28MWTtyyOjwMf9yyQFcjWQzXF";
@@ -106,10 +122,22 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
         beacons.get(3).setName("Gears");
 
         waitForStart();
+        runtime.reset();
+
+        telemetry.addData("Status", "Stuff");
+        telemetry.update();
 
         beacons.activate();
 
-        while (opModeIsActive()) {
+        VuforiaTrackable firstImage = null;
+
+        leftMotor.setPower(0.5);
+        rightMotor.setPower(0.5);
+
+        telemetry.addData("Status", "Things");
+        telemetry.update();
+
+        while (opModeIsActive() && firstImage == null) {
             for (VuforiaTrackable beacon : beacons) {
                 OpenGLMatrix pose = ((VuforiaTrackableDefaultListener) beacon.getListener()).getPose();
 
@@ -118,13 +146,23 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
 
                     telemetry.addData(beacon.getName() + "-Translation", translation);
 
-                    double degreesToTurn = Math.toDegrees(Math.atan2(translation.get(0), translation.get(2)));
+                    double degreesToTurn = Math.toDegrees(Math.atan2(translation.get(1), translation.get(2)));
 
                     telemetry.addData(beacon.getName() + "-Degrees", degreesToTurn);
+
+                    firstImage = beacon;
                 }
             }
             telemetry.update();
         }
+
+        while (((VuforiaTrackableDefaultListener) firstImage.getListener()).getPose().getTranslation().get(1) > 0) {
+            leftMotor.setPower(0.5);
+            rightMotor.setPower(0.5);
+        }
+
+        leftMotor.setPower(0);
+        rightMotor.setPower(0);
     }
 
     /**
