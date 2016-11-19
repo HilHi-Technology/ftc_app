@@ -42,7 +42,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import static java.lang.Math.abs;
 
 /**
- * This file contains an example of an iterative (Non-Linear) "OpMode".
+ q* This file contains an example of an iterative (Non-Linear) "OpMode".
  * An OpMode is a 'program' that runs in either the autonomous or the teleop period of an FTC match.
  * The names of OpModes appear on the menu of the FTC Driver Station.
  * When an selection is made from the menu, the corresponding OpMode
@@ -63,6 +63,9 @@ public class FPSTeleOp extends OpMode
 
     private DcMotor leftMotor = null;
     private DcMotor rightMotor = null;
+    private DcMotor sweep = null;
+    private DcMotor spin = null;
+    private DcMotor arm = null;
 
     private final float turnMultiplier = 0.5f;
 
@@ -75,8 +78,11 @@ public class FPSTeleOp extends OpMode
 
         leftMotor = hardwareMap.dcMotor.get("lm");
         rightMotor = hardwareMap.dcMotor.get("rm");
+        sweep = hardwareMap.dcMotor.get("sweep");
+        spin = hardwareMap.dcMotor.get("spin");
+        //rightMotor = hardwareMap.dcMotor.get("arm");
 
-        rightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
         /* eg: Initialize the hardware variables. Note that the strings used here as parameters
          * to 'get' must correspond to the names assigned during the robot configuration
@@ -118,6 +124,10 @@ public class FPSTeleOp extends OpMode
         //Get raw joystick input
         float forwardStick = -gamepad1.left_stick_y;
         float turnStick = -gamepad1.right_stick_x;
+        boolean shootOut = gamepad1.right_bumper;
+        boolean suckIn = gamepad1.left_bumper;
+        float pushOut = gamepad1.left_trigger;
+
 
         telemetry.addData("ForwardStick", forwardStick);
         telemetry.addData("TurnStick", turnStick);
@@ -154,13 +164,21 @@ public class FPSTeleOp extends OpMode
         // eg: Run wheels in tank mode (note: The joystick goes negative when pushed forwards)
         // leftMotor.setPower(-gamepad1.left_stick_y);
         // rightMotor.setPower(-gamepad1.right_stick_y);
-    }
 
-    /*
-     * Code to run ONCE after the driver hits STOP
-     */
-    @Override
-    public void stop() {
+        if (suckIn) {
+            sweep.setPower(1);
+        }
+        else if (pushOut > 0) {
+            sweep.setPower(-1);
+        }
+        else {
+            sweep.setPower(0);
+        }
+        if (shootOut) {
+            spin.setPower(1);
+        }
+        else {
+            spin.setPower(0);
+        }
     }
-
 }
