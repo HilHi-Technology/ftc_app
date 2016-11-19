@@ -107,6 +107,12 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
         rightMotor = hardwareMap.dcMotor.get("rm");
         leftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
+        leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        leftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
         VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters(R.id.cameraMonitorViewId);
         parameters.vuforiaLicenseKey = "AVpZvhj/////AAAAGS4AanX+yU5toBr4URhwzTlcjMcTgpcgbIoseTYKxBoYxNobI6A5VxrfyfBiSEpEyk0RA0ynCqNIQbnpYg20ufD+Fg1eHR6sB+6BalZhvf6vnigBboPowdl+7k64fnboXbpzez157m7B6Yiegz9uygCQJZiDMzwcyz753xOxnKPh4LGtTaY2ErXJn0e46tNinSqyF5O6PiHyooUQPxleWWbqZ9ygGXspfCy3AqivZfw6OJn5L2l6He3JX89Kxprpi/EMhTYT5NXXzneIKYwjNaf4L0UShuZI3DgzLIx3+2QVIRaAP1X5iuWwMQxrj5BMRnvyRyZrTuGZNOTdPKc28MWTtyyOjwMf9yyQFcjWQzXF";
         parameters.cameraDirection = VuforiaLocalizer.CameraDirection.BACK;
@@ -126,6 +132,11 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
 
         telemetry.addData("Status", "Stuff");
         telemetry.update();
+
+        encoderDrive(0.5, 2880, 2880, 500);
+        encoderDrive(0.5, 0, 2880, 1000);
+        encoderDrive(0.5, 7200, 7200, 1000);
+        encoderDrive(0.5, 2880, 0, 1000);
 
         beacons.activate();
 
@@ -171,5 +182,40 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
      */
     String format(OpenGLMatrix transformationMatrix) {
         return transformationMatrix.formatAsTransform();
+    }
+
+    public void encoderDrive(double speed, double leftTicks, double rightTicks, double sleepTime) {
+        int newLeftTarget;
+        int newRightTarget;
+
+        if (opModeIsActive()) {
+
+            newLeftTarget = leftMotor.getCurrentPosition() + (int) leftTicks;
+            newRightTarget = rightMotor.getCurrentPosition() + (int) rightTicks;
+            leftMotor.setTargetPosition(newLeftTarget);
+            rightMotor.setTargetPosition(newRightTarget);
+
+            leftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            rightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            runtime.reset();
+            leftMotor.setPower(Math.abs(speed));
+            rightMotor.setPower(Math.abs(speed));
+
+            while (opModeIsActive() && (leftMotor.isBusy() && rightMotor.isBusy())) {
+
+                telemetry.addData("Path1", "Running to %7d :%7d", newLeftTarget, newRightTarget);
+                telemetry.addData("Path2", "Running at %7d :%7d", leftMotor.getCurrentPosition(), rightMotor.getCurrentPosition());
+                telemetry.update();
+            }
+
+            leftMotor.setPower(0);
+            rightMotor.setPower(0);
+
+            leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+            sleep((int) sleepTime);
+        }
     }
 }
