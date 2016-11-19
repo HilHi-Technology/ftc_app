@@ -105,7 +105,7 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
 
         leftMotor  = hardwareMap.dcMotor.get("lm");
         rightMotor = hardwareMap.dcMotor.get("rm");
-        leftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        rightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
         leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -133,10 +133,11 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
         telemetry.addData("Status", "Stuff");
         telemetry.update();
 
-        encoderDrive(0.5, 2880, 2880, 500);
-        encoderDrive(0.5, 0, 2880, 1000);
-        encoderDrive(0.5, 7200, 7200, 1000);
+        encoderDrive(0.5, 500, 500, 500);
         encoderDrive(0.5, 2880, 0, 1000);
+        encoderDrive(0.5, 5700, 5700, 1000);
+        encoderDrive(0.5, 0, 2880, 1000);
+
 
         beacons.activate();
 
@@ -174,6 +175,10 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
 
         leftMotor.setPower(0);
         rightMotor.setPower(0);
+
+        sleep(1000);
+
+        encoderDrive(0.5, 5400, 0, 1000);
     }
 
     /**
@@ -199,20 +204,54 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
             rightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
             runtime.reset();
-            leftMotor.setPower(Math.abs(speed));
-            rightMotor.setPower(Math.abs(speed));
 
-            while (opModeIsActive() && (leftMotor.isBusy() && rightMotor.isBusy())) {
+            if(leftTicks == 0) {
+                leftMotor.setPower(0);
+                rightMotor.setPower(Math.abs(speed));
+            }
+            else if(rightTicks == 0) {
+                leftMotor.setPower(Math.abs(speed));
+                rightMotor.setPower(Math.abs(0));
+            }
+            else if(leftTicks > rightTicks) {
+                leftMotor.setPower(Math.abs(speed));
+                rightMotor.setPower(Math.abs((rightTicks/leftTicks)*speed));
+            }
+            else if(rightTicks > leftTicks) {
+                leftMotor.setPower(Math.abs((leftTicks/rightTicks)*speed));
+                rightMotor.setPower(Math.abs(speed));
+            }
+            else if(rightTicks == leftTicks) {
+                rightMotor.setPower(speed);
+                leftMotor.setPower(speed);
+            }
 
-                telemetry.addData("Path1", "Running to %7d :%7d", newLeftTarget, newRightTarget);
-                telemetry.addData("Path2", "Running at %7d :%7d", leftMotor.getCurrentPosition(), rightMotor.getCurrentPosition());
-                telemetry.update();
+            if(rightTicks == 0) {
+                while (opModeIsActive() && leftMotor.isBusy()) {
+                    telemetry.addData("Path1", "Running to %7d :%7d", newLeftTarget, newRightTarget);
+                    telemetry.addData("Path2", "Running at %7d :%7d", leftMotor.getCurrentPosition(), rightMotor.getCurrentPosition());
+                    telemetry.update();
+                }
+            }
+            else if(leftTicks == 0) {
+                while (opModeIsActive() && rightMotor.isBusy()) {
+                    telemetry.addData("Path1", "Running to %7d :%7d", newLeftTarget, newRightTarget);
+                    telemetry.addData("Path2", "Running at %7d :%7d", leftMotor.getCurrentPosition(), rightMotor.getCurrentPosition());
+                    telemetry.update();
+                }
+            }
+            else {
+                while (opModeIsActive() && (rightMotor.isBusy() && leftMotor.isBusy())) {
+                    telemetry.addData("Path1", "Running to %7d :%7d", newLeftTarget, newRightTarget);
+                    telemetry.addData("Path2", "Running at %7d :%7d", leftMotor.getCurrentPosition(), rightMotor.getCurrentPosition());
+                    telemetry.update();
+                }
             }
 
             leftMotor.setPower(0);
             rightMotor.setPower(0);
 
-             leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
             sleep((int) sleepTime);
