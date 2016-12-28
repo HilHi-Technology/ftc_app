@@ -726,9 +726,7 @@ public class AHRSProtocol extends IMUProtocol {
         return (short)(input * 100);
     }
     
-    public static short encodeUnsignedHundredthsFloat(float input ) {
-        return (short)(input * 100);
-    }
+    public static short encodeUnsignedHundredthsFloat(float input ) { return (short)(input * 100); }
 
     public static float encodeRatioFloat(float input_ratio) {
         return (float)(input_ratio *= 32768);

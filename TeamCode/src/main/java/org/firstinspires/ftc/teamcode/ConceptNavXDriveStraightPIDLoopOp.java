@@ -88,8 +88,8 @@ public class ConceptNavXDriveStraightPIDLoopOp extends OpMode {
 
     @Override
     public void init() {
-        leftMotor = hardwareMap.dcMotor.get("left motor");
-        rightMotor = hardwareMap.dcMotor.get("right motor");
+        leftMotor = hardwareMap.dcMotor.get("lm");
+        rightMotor = hardwareMap.dcMotor.get("rm");
 
         navx_device = AHRS.getInstance(hardwareMap.deviceInterfaceModule.get("dim"),
                 NAVX_DIM_I2C_PORT,

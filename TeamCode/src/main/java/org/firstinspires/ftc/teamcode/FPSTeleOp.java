@@ -85,11 +85,12 @@ public class FPSTeleOp extends OpMode
         sweep = hardwareMap.dcMotor.get("sweep");
         spin1 = hardwareMap.dcMotor.get("spin1");
         spin2 = hardwareMap.dcMotor.get("spin2");
-        //rightMotor = hardwareMap.dcMotor.get("arm");
+        arm = hardwareMap.dcMotor.get("arm");
 
-        //buttonPusher = hardwareMap.servo.get("bp");
+        buttonPusher = hardwareMap.servo.get("bp");
 
-        rightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        arm.setDirection(DcMotorSimple.Direction.REVERSE);
+        rightMotor.setDirection(DcMotor.Direction.REVERSE);
         spin1.setDirection(DcMotorSimple.Direction.REVERSE);
 
         /* eg: Initialize the hardware variables. Note that the strings used here as parameters
@@ -169,15 +170,18 @@ public class FPSTeleOp extends OpMode
         telemetry.addData("ForwardPower", forwardPower);
         telemetry.addData("TurnPower", turnPower);
 
-        //if (gamepad1.a) {
-          //  buttonPusher.setPosition(1);
-        //} else {
-          //  buttonPusher.setPosition(0);
-        //}
+        if (gamepad1.b) {
+            buttonPusher.setPosition(0);
+        } else if (gamepad1.x) {
+            buttonPusher.setPosition(1);
+        }
+        else {
+            buttonPusher.setPosition(0.5);
+        }
 
-        // eg: Run wheels in tank mode (note: The joystick goes negative when pushed forwards)
-        // leftMotor.setPower(-gamepad1.left_stick_y);
-        // rightMotor.setPower(-gamepad1.right_stick_y);
+        //eg: Run wheels in tank mode (note: The joystick goes negative when pushed forwards)
+        //leftMotor.setPower(-gamepad1.left_stick_y);
+        //rightMotor.setPower(-gamepad1.right_stick_y);
 
         if (suckIn) {
             sweep.setPower(1);
@@ -195,6 +199,15 @@ public class FPSTeleOp extends OpMode
         else {
             spin1.setPower(0);
             spin2.setPower(0);
+        }
+        if (gamepad1.y) {
+            arm.setPower(1);
+        }
+        else if (gamepad1.a) {
+            arm.setPower(-1);
+        }
+        else {
+            arm.setPower(0);
         }
     }
 }
