@@ -139,38 +139,28 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
         beacons.get(2).setName("Lego");
         beacons.get(3).setName("Gears");
 
-
         colorSensor.enableLed(false);
         Color.RGBToHSV(colorSensor.red() * 8, colorSensor.green() * 8, colorSensor.blue() * 8, hsvValues);
         runtime.reset();
 
         telemetry.addData("Status", "Stuff");
         telemetry.update();
+
         waitForStart();
+
         sleep(1000);
-        /*
-        encoderDrive(0.3, 1000, 1000, 1000);
-        navXTurn(90, 0.4, 0.5, 500);
-        encoderDrive(0.3, 1000, 1000, 1000);
-        navXTurn(90, 0.4, 0.5, 500);
-        encoderDrive(0.3, 1000, 1000, 1000);
-        navXTurn(90, 0.4, 0.5, 500);
-        encoderDrive(0.3, 1000, 1000, 1000);
-        navXTurn(90, 0.4, 0.5, 1000);
-        */
+
         encoderDrive(0.4, 300, 300, 1000);
         navXTurn(-40, 0.4, 0.5, 1000);
-        //encoderDrive(0.4, 2880, 0, 1000);
-        encoderDrive(0.4, 4000, 4000, 1000);
-        navXTurn(40, 0.4, 0.5, 1000);
-        //encoderDrive(0.4, 0, 2880, 1000);
+        encoderDrive(0.4, 4100, 4100, 1000);
+        navXOneTurn(40, 0.4, 0.5, 1000);
 
         beacons.activate();
 
         VuforiaTrackable firstImage = null;
 
-        leftMotor.setPower(-0.5);
-        rightMotor.setPower(-0.5);
+        leftMotor.setPower(-0.2);
+        rightMotor.setPower(-0.2);
 
         telemetry.addData("Status", "Things");
         telemetry.update();
@@ -195,14 +185,12 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
         }
 
         while (((VuforiaTrackableDefaultListener) firstImage.getListener()).getPose().getTranslation().get(1) > 0) {
-            leftMotor.setPower(-0.5);
-            rightMotor.setPower(-0.5);
+            leftMotor.setPower(-0.2);
+            rightMotor.setPower(-0.2);
         }
 
         leftMotor.setPower(0);
         rightMotor.setPower(0);
-
-        encoderDrive(0.5, 1000, 1000, 1000);
 
         while(true) {
             telemetry.addData("Clear", colorSensor.alpha());
@@ -244,11 +232,18 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
             leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
+            sleep(250);
+
             leftMotor.setTargetPosition((int) leftTicks);
             rightMotor.setTargetPosition((int) rightTicks);
 
+            sleep(250);
+
             leftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             rightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            sleep(250);
+
             //runtime.reset();
             if (leftTicks == 0) {
                 leftMotor.setPower(0);
@@ -300,12 +295,9 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
         }
     }
     public void navXTurn(float turn, double minPower, double maxPower, double turnSleepTime) {
-
         leftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
         sleep(250);
-
         float powerRatio = 1;
         if (navx_device.isConnected()) {
             telemetry.addData("NavX is Connected?", "Yes");
@@ -348,4 +340,60 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
         }
         sleep((int) turnSleepTime);
     }
+
+    public void navXOneTurn(float turn, double minPower, double maxPower, double turnSleepTime) {
+        leftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        sleep(250);
+        float powerRatio = 1;
+        float rightPower = 1;
+        float leftPower = 1;
+        if (navx_device.isConnected()) {
+            telemetry.addData("NavX is Connected?", "Yes");
+            if (navx_device.isMagnetometerCalibrated()) {
+                telemetry.addData("Magnometer is Calibrated?", "Yes");
+                navx_device.zeroYaw();
+                telemetry.addData("Zero Yaw?", "Yes");
+                telemetry.update();
+                sleep(500);
+                if (turn < 0) {
+                    maxPower = -maxPower;
+                    minPower = -minPower;
+                    rightPower = 1;
+                    leftPower = 0;
+                }
+                else {
+                    rightPower = 0;
+                    leftPower = 1;
+                }
+                while (Math.abs(navx_device.getYaw()) < Math.abs(turn)) {
+                    powerRatio = ((Math.abs(turn) - Math.abs(navx_device.getYaw())) / Math.abs(turn)) * (float)maxPower;
+                    telemetry.addData("Turn Goal", "Turn:Yaw:Ratio " + String.format("%.2f : %.2f : %.2f",turn, navx_device.getYaw(), powerRatio));
+                    if (Math.abs(powerRatio) < Math.abs(minPower)) {
+                        leftMotor.setPower(-minPower*leftPower);
+                        rightMotor.setPower(minPower*rightPower);
+                        telemetry.addData("Actual Speed", "Actual Speed:" + String.format("%.2f",minPower));
+                        telemetry.update();
+                    } else {
+                        leftMotor.setPower(-powerRatio*leftPower);
+                        rightMotor.setPower(powerRatio*rightPower);
+                        telemetry.addData("Actual Speed", "Actual Speed:" + String.format("%.2f",powerRatio));
+                        telemetry.update();
+                    }
+                }
+                leftMotor.setPower(0);
+                rightMotor.setPower(0);
+            } else {
+                telemetry.addData("Magnometer is Calibrated?", "No");
+                telemetry.update();
+                sleep(500);
+            }
+        } else {
+            telemetry.addData("NavX is Connected?", "No");
+            telemetry.update();
+            sleep(500);
+        }
+        sleep((int) turnSleepTime);
+    }
+
 }
