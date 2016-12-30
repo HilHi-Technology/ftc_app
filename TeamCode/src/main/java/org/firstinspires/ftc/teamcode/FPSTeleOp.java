@@ -69,7 +69,10 @@ public class FPSTeleOp extends OpMode
     private DcMotor spin2 = null;
     private DcMotor arm = null;
 
-    private Servo buttonPusher = null;
+    private Servo pusher = null;
+
+    private boolean aWasPushed = false;
+    private boolean pusherOut = false;
 
     private final float turnMultiplier = 0.5f;
 
@@ -85,6 +88,7 @@ public class FPSTeleOp extends OpMode
         sweep = hardwareMap.dcMotor.get("sweep");
         spin1 = hardwareMap.dcMotor.get("spin1");
         spin2 = hardwareMap.dcMotor.get("spin2");
+        pusher = hardwareMap.servo.get("push");
         //rightMotor = hardwareMap.dcMotor.get("arm");
 
         //buttonPusher = hardwareMap.servo.get("bp");
@@ -135,6 +139,7 @@ public class FPSTeleOp extends OpMode
         boolean shootOut = gamepad1.right_bumper;
         boolean suckIn = gamepad1.left_bumper;
         float pushOut = gamepad1.left_trigger;
+        boolean buttonPush = gamepad1.a;
 
 
         telemetry.addData("ForwardStick", forwardStick);
@@ -169,12 +174,6 @@ public class FPSTeleOp extends OpMode
         telemetry.addData("ForwardPower", forwardPower);
         telemetry.addData("TurnPower", turnPower);
 
-        //if (gamepad1.a) {
-          //  buttonPusher.setPosition(1);
-        //} else {
-          //  buttonPusher.setPosition(0);
-        //}
-
         // eg: Run wheels in tank mode (note: The joystick goes negative when pushed forwards)
         // leftMotor.setPower(-gamepad1.left_stick_y);
         // rightMotor.setPower(-gamepad1.right_stick_y);
@@ -195,6 +194,19 @@ public class FPSTeleOp extends OpMode
         else {
             spin1.setPower(0);
             spin2.setPower(0);
+        }
+
+        if (buttonPush && !aWasPushed) {
+            pusherOut = !pusherOut;
+            aWasPushed = true;
+        } else if (!buttonPush && aWasPushed) {
+            aWasPushed = false;
+        }
+
+        if (pusherOut) {
+            pusher.setPosition(1);
+        } else {
+            pusher.setPosition(0);
         }
     }
 }
