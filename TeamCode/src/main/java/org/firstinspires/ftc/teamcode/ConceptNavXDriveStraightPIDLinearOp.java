@@ -44,7 +44,7 @@ import java.text.DecimalFormat;
 
 /*
  * An example linear op mode where the robot will drive in
- * a straight line (where the driving direction is guided by
+ * a straight line (where the driving direction is guided byR
  * the Yaw angle from a navX-Model device).
  *
  * This example uses a simple PID controller configuration
@@ -89,8 +89,8 @@ public class ConceptNavXDriveStraightPIDLinearOp extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        leftMotor = hardwareMap.dcMotor.get("left motor");
-        rightMotor = hardwareMap.dcMotor.get("right motor");
+        leftMotor = hardwareMap.dcMotor.get("lm");
+        rightMotor = hardwareMap.dcMotor.get("rm");
 
         navx_device = AHRS.getInstance(hardwareMap.deviceInterfaceModule.get("dim"),
                 NAVX_DIM_I2C_PORT,
@@ -105,8 +105,7 @@ public class ConceptNavXDriveStraightPIDLinearOp extends LinearOpMode {
         //rightMotor.setChannelMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
 
         /* Create a PID Controller which uses the Yaw Angle as input. */
-        yawPIDController = new navXPIDController( navx_device,
-                                    navXPIDController.navXTimestampedDataSource.YAW);
+        yawPIDController = new navXPIDController( navx_device, navXPIDController.navXTimestampedDataSource.YAW);
 
         /* Configure the PID controller */
         yawPIDController.setSetpoint(TARGET_ANGLE_DEGREES);

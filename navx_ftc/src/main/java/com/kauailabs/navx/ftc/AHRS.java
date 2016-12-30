@@ -394,8 +394,7 @@ public class AHRS {
      * NOTE:  During this automatic calibration, the yaw, pitch and roll
      * values returned may not be accurate.
      *<p>
-     * Once calibration is complete, the sensor will automatically remove
-     * an internal yaw offset value from all reported values.
+     * Once calibration offset value from all reported values.
      *<p>
      * @return Returns true if the sensor is currently automatically
      * calibrating the gyro and accelerometer sensors.

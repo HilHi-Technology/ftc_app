@@ -43,7 +43,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import static java.lang.Math.abs;
 
 /**
- q* This file contains an example of an iterative (Non-Linear) "OpMode".
+ * This file contains an example of an iterative (Non-Linear) "OpMode".
  * An OpMode is a 'program' that runs in either the autonomous or the teleop period of an FTC match.
  * The names of OpModes appear on the menu of the FTC Driver Station.
  * When an selection is made from the menu, the corresponding OpMode
@@ -89,11 +89,12 @@ public class FPSTeleOp extends OpMode
         spin1 = hardwareMap.dcMotor.get("spin1");
         spin2 = hardwareMap.dcMotor.get("spin2");
         pusher = hardwareMap.servo.get("push");
-        //rightMotor = hardwareMap.dcMotor.get("arm");
+        arm = hardwareMap.dcMotor.get("arm");
 
-        //buttonPusher = hardwareMap.servo.get("bp");
+        buttonPusher = hardwareMap.servo.get("bp");
 
-        rightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        arm.setDirection(DcMotorSimple.Direction.REVERSE);
+        rightMotor.setDirection(DcMotor.Direction.REVERSE);
         spin1.setDirection(DcMotorSimple.Direction.REVERSE);
 
         /* eg: Initialize the hardware variables. Note that the strings used here as parameters
@@ -207,6 +208,16 @@ public class FPSTeleOp extends OpMode
             pusher.setPosition(1);
         } else {
             pusher.setPosition(0);
+	}
+
+        if (gamepad1.y) {
+            arm.setPower(1);
+        }
+        else if (gamepad1.a) {
+            arm.setPower(-1);
+        }
+        else {
+            arm.setPower(0);
         }
     }
 }

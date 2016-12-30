@@ -34,23 +34,23 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.ftcrobotcontroller.R;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.util.RobotLog;
+
 import com.vuforia.HINT;
 import com.vuforia.Vuforia;
+import android.app.Activity;
+import android.graphics.Color;
+import android.view.View;
 
+import com.kauailabs.navx.ftc.AHRS;
+
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
-import org.firstinspires.ftc.robotcore.external.matrices.MatrixF;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
@@ -94,24 +94,36 @@ import java.util.List;
 public class ConceptVuforiaNavigation extends LinearOpMode {
 
     private ElapsedTime runtime = new ElapsedTime();
+    private AHRS navx_device;
 
     DcMotor leftMotor = null;
     DcMotor rightMotor = null;
+    ColorSensor colorSensor;
 
-    @Override public void runOpMode() {
+    @Override
+    public void runOpMode() {
+        leftMotor = hardwareMap.dcMotor.get("lm");
+        rightMotor = hardwareMap.dcMotor.get("rm");
+
+        leftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        navx_device = AHRS.getInstance(hardwareMap.deviceInterfaceModule.get("dim"), 0, AHRS.DeviceDataType.kProcessedData);
 
         telemetry.addData("Status", "Initialized");
         telemetry.update();
+        colorSensor = hardwareMap.colorSensor.get("color");
 
-        leftMotor  = hardwareMap.dcMotor.get("lm");
-        rightMotor = hardwareMap.dcMotor.get("rm");
-        rightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        float hsvValues[] = {0F,0F,0F};
+        final float values[] = hsvValues;
+        final View relativeLayout = ((Activity) hardwareMap.appContext).findViewById(R.id.RelativeLayout);
+
+        colorSensor.enableLed(false);
 
         leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-        leftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        rightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters(R.id.cameraMonitorViewId);
         parameters.vuforiaLicenseKey = "AVpZvhj/////AAAAGS4AanX+yU5toBr4URhwzTlcjMcTgpcgbIoseTYKxBoYxNobI6A5VxrfyfBiSEpEyk0RA0ynCqNIQbnpYg20ufD+Fg1eHR6sB+6BalZhvf6vnigBboPowdl+7k64fnboXbpzez157m7B6Yiegz9uygCQJZiDMzwcyz753xOxnKPh4LGtTaY2ErXJn0e46tNinSqyF5O6PiHyooUQPxleWWbqZ9ygGXspfCy3AqivZfw6OJn5L2l6He3JX89Kxprpi/EMhTYT5NXXzneIKYwjNaf4L0UShuZI3DgzLIx3+2QVIRaAP1X5iuWwMQxrj5BMRnvyRyZrTuGZNOTdPKc28MWTtyyOjwMf9yyQFcjWQzXF";
@@ -127,24 +139,28 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
         beacons.get(2).setName("Lego");
         beacons.get(3).setName("Gears");
 
-        waitForStart();
+        colorSensor.enableLed(false);
+        Color.RGBToHSV(colorSensor.red() * 8, colorSensor.green() * 8, colorSensor.blue() * 8, hsvValues);
         runtime.reset();
 
         telemetry.addData("Status", "Stuff");
         telemetry.update();
 
-        encoderDrive(0.5, 500, 500, 500);
-        encoderDrive(0.5, 2880, 0, 1000);
-        encoderDrive(0.5, 5700, 5700, 1000);
-        encoderDrive(0.5, 0, 2880, 1000);
+        waitForStart();
 
+        sleep(1000);
+
+        encoderDrive(0.4, 300, 300, 1000);
+        navXTurn(-40, 0.4, 0.5, 1000);
+        encoderDrive(0.4, 4100, 4100, 1000);
+        navXOneTurn(40, 0.4, 0.5, 1000);
 
         beacons.activate();
 
         VuforiaTrackable firstImage = null;
 
-        leftMotor.setPower(0.5);
-        rightMotor.setPower(0.5);
+        leftMotor.setPower(-0.2);
+        rightMotor.setPower(-0.2);
 
         telemetry.addData("Status", "Things");
         telemetry.update();
@@ -169,92 +185,215 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
         }
 
         while (((VuforiaTrackableDefaultListener) firstImage.getListener()).getPose().getTranslation().get(1) > 0) {
-            leftMotor.setPower(0.5);
-            rightMotor.setPower(0.5);
+            leftMotor.setPower(-0.2);
+            rightMotor.setPower(-0.2);
         }
 
         leftMotor.setPower(0);
         rightMotor.setPower(0);
 
-        sleep(1000);
-
-        encoderDrive(0.5, 5400, 0, 1000);
+        while(true) {
+            telemetry.addData("Clear", colorSensor.alpha());
+            telemetry.addData("Red", colorSensor.red());
+            telemetry.addData("Green", colorSensor.green());
+            telemetry.addData("Blue", colorSensor.blue());
+            telemetry.addData("Hue", hsvValues[0]);
+            telemetry.update();
+            relativeLayout.post(new Runnable() {
+                public void run() {
+                    relativeLayout.setBackgroundColor(Color.HSVToColor(0xff, values));
+                }
+            });
+        }
     }
+
 
     /**
      * A simple utility that extracts positioning information from a transformation matrix
      * and formats it in a form palatable to a human being.
      */
+        /*
     String format(OpenGLMatrix transformationMatrix) {
         return transformationMatrix.formatAsTransform();
     }
+        */
 
     public void encoderDrive(double speed, double leftTicks, double rightTicks, double sleepTime) {
-        int newLeftTarget;
-        int newRightTarget;
-
         if (opModeIsActive()) {
 
-            newLeftTarget = leftMotor.getCurrentPosition() + (int) leftTicks;
-            newRightTarget = rightMotor.getCurrentPosition() + (int) rightTicks;
-            leftMotor.setTargetPosition(newLeftTarget);
-            rightMotor.setTargetPosition(newRightTarget);
-
-            leftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            rightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-            runtime.reset();
-
-            if(leftTicks == 0) {
-                leftMotor.setPower(0);
-                rightMotor.setPower(Math.abs(speed));
-            }
-            else if(rightTicks == 0) {
-                leftMotor.setPower(Math.abs(speed));
-                rightMotor.setPower(Math.abs(0));
-            }
-            else if(leftTicks > rightTicks) {
-                leftMotor.setPower(Math.abs(speed));
-                rightMotor.setPower(Math.abs((rightTicks/leftTicks)*speed));
-            }
-            else if(rightTicks > leftTicks) {
-                leftMotor.setPower(Math.abs((leftTicks/rightTicks)*speed));
-                rightMotor.setPower(Math.abs(speed));
-            }
-            else if(rightTicks == leftTicks) {
-                rightMotor.setPower(speed);
-                leftMotor.setPower(speed);
-            }
-
-            if(rightTicks == 0) {
-                while (opModeIsActive() && leftMotor.isBusy()) {
-                    telemetry.addData("Path1", "Running to %7d :%7d", newLeftTarget, newRightTarget);
-                    telemetry.addData("Path2", "Running at %7d :%7d", leftMotor.getCurrentPosition(), rightMotor.getCurrentPosition());
-                    telemetry.update();
-                }
-            }
-            else if(leftTicks == 0) {
-                while (opModeIsActive() && rightMotor.isBusy()) {
-                    telemetry.addData("Path1", "Running to %7d :%7d", newLeftTarget, newRightTarget);
-                    telemetry.addData("Path2", "Running at %7d :%7d", leftMotor.getCurrentPosition(), rightMotor.getCurrentPosition());
-                    telemetry.update();
-                }
-            }
-            else {
-                while (opModeIsActive() && (rightMotor.isBusy() && leftMotor.isBusy())) {
-                    telemetry.addData("Path1", "Running to %7d :%7d", newLeftTarget, newRightTarget);
-                    telemetry.addData("Path2", "Running at %7d :%7d", leftMotor.getCurrentPosition(), rightMotor.getCurrentPosition());
-                    telemetry.update();
-                }
-            }
-
-            leftMotor.setPower(0);
-            rightMotor.setPower(0);
+            leftTicks = -leftTicks;
+            rightTicks = -rightTicks;
 
             leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
+            sleep(250);
+
+            leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+            sleep(250);
+
+            leftMotor.setTargetPosition((int) leftTicks);
+            rightMotor.setTargetPosition((int) rightTicks);
+
+            sleep(250);
+
+            leftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            rightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            sleep(250);
+
+            //runtime.reset();
+            if (leftTicks == 0) {
+                leftMotor.setPower(0);
+                rightMotor.setPower(Math.abs(speed));
+            } else if (rightTicks == 0) {
+                leftMotor.setPower(Math.abs(speed));
+                rightMotor.setPower(Math.abs(0));
+            } else if (leftTicks > rightTicks) {
+                leftMotor.setPower(Math.abs(speed));
+                rightMotor.setPower(Math.abs((rightTicks / leftTicks) * speed));
+            } else if (rightTicks > leftTicks) {
+                leftMotor.setPower(Math.abs((leftTicks / rightTicks) * speed));
+                rightMotor.setPower(Math.abs(speed));
+            } else if (rightTicks == leftTicks) {
+                rightMotor.setPower(speed);
+                leftMotor.setPower(speed);
+            }
+
+            //leftMotor.setPower(speed);
+            //rightMotor.setPower(speed);
+
+            if (rightTicks == 0) {
+                while (opModeIsActive() && (Math.abs(leftMotor.getCurrentPosition()) < Math.abs(leftMotor.getTargetPosition()))) {
+                    telemetry.addData("Path1", "Running to %7d :%7d", (int) leftTicks, (int) rightTicks);
+                    telemetry.addData("Path2", "Running at %7d :%7d", leftMotor.getCurrentPosition(), rightMotor.getCurrentPosition());
+                    telemetry.update();
+                }
+            } else if (leftTicks == 0) {
+                while (opModeIsActive() && (Math.abs(rightMotor.getCurrentPosition()) < Math.abs(rightMotor.getTargetPosition()))) {
+                    telemetry.addData("Path1", "Running to %7d :%7d", (int) leftTicks, (int) rightTicks);
+                    telemetry.addData("Path2", "Running at %7d :%7d", leftMotor.getCurrentPosition(), rightMotor.getCurrentPosition());
+                    telemetry.update();
+                }
+            } else {
+                while (opModeIsActive() && (Math.abs(leftMotor.getCurrentPosition()) < Math.abs(leftMotor.getTargetPosition())) && (Math.abs(rightMotor.getCurrentPosition()) < Math.abs(rightMotor.getTargetPosition()))) {
+                    telemetry.addData("Path1", "Running to %7d :%7d", (int) leftTicks, (int) rightTicks);
+                    telemetry.addData("Path2", "Running at %7d :%7d", leftMotor.getCurrentPosition(), rightMotor.getCurrentPosition());
+                    telemetry.update();
+                }
+            }
+
+            leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+            leftMotor.setPower(0);
+            rightMotor.setPower(0);
+
             sleep((int) sleepTime);
         }
     }
+    public void navXTurn(float turn, double minPower, double maxPower, double turnSleepTime) {
+        leftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        sleep(250);
+        float powerRatio = 1;
+        if (navx_device.isConnected()) {
+            telemetry.addData("NavX is Connected?", "Yes");
+            if (navx_device.isMagnetometerCalibrated()) {
+                telemetry.addData("Magnometer is Calibrated?", "Yes");
+                navx_device.zeroYaw();
+                telemetry.addData("Zero Yaw?", "Yes");
+                telemetry.update();
+                sleep(500);
+                if (turn < 0) {
+                    maxPower = -maxPower;
+                    minPower = -minPower;
+                }
+                while (Math.abs(navx_device.getYaw()) < Math.abs(turn)) {
+                    powerRatio = ((Math.abs(turn) - Math.abs(navx_device.getYaw())) / Math.abs(turn)) * (float)maxPower;
+                    telemetry.addData("Turn Goal", "Turn:Yaw:Ratio " + String.format("%.2f : %.2f : %.2f",turn, navx_device.getYaw(), powerRatio));
+                    if (Math.abs(powerRatio) < Math.abs(minPower)) {
+                        leftMotor.setPower(-minPower);
+                        rightMotor.setPower(minPower);
+                        telemetry.addData("Actual Speed", "Actual Speed:" + String.format("%.2f",minPower));
+                        telemetry.update();
+                    } else {
+                        leftMotor.setPower(-powerRatio);
+                        rightMotor.setPower(powerRatio);
+                        telemetry.addData("Actual Speed", "Actual Speed:" + String.format("%.2f",powerRatio));
+                        telemetry.update();
+                    }
+                }
+                leftMotor.setPower(0);
+                rightMotor.setPower(0);
+            } else {
+                telemetry.addData("Magnometer is Calibrated?", "No");
+                telemetry.update();
+                sleep(500);
+            }
+        } else {
+            telemetry.addData("NavX is Connected?", "No");
+            telemetry.update();
+            sleep(500);
+        }
+        sleep((int) turnSleepTime);
+    }
+
+    public void navXOneTurn(float turn, double minPower, double maxPower, double turnSleepTime) {
+        leftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        sleep(250);
+        float powerRatio = 1;
+        float rightPower = 1;
+        float leftPower = 1;
+        if (navx_device.isConnected()) {
+            telemetry.addData("NavX is Connected?", "Yes");
+            if (navx_device.isMagnetometerCalibrated()) {
+                telemetry.addData("Magnometer is Calibrated?", "Yes");
+                navx_device.zeroYaw();
+                telemetry.addData("Zero Yaw?", "Yes");
+                telemetry.update();
+                sleep(500);
+                if (turn < 0) {
+                    maxPower = -maxPower;
+                    minPower = -minPower;
+                    rightPower = 1;
+                    leftPower = 0;
+                }
+                else {
+                    rightPower = 0;
+                    leftPower = 1;
+                }
+                while (Math.abs(navx_device.getYaw()) < Math.abs(turn)) {
+                    powerRatio = ((Math.abs(turn) - Math.abs(navx_device.getYaw())) / Math.abs(turn)) * (float)maxPower;
+                    telemetry.addData("Turn Goal", "Turn:Yaw:Ratio " + String.format("%.2f : %.2f : %.2f",turn, navx_device.getYaw(), powerRatio));
+                    if (Math.abs(powerRatio) < Math.abs(minPower)) {
+                        leftMotor.setPower(-minPower*leftPower);
+                        rightMotor.setPower(minPower*rightPower);
+                        telemetry.addData("Actual Speed", "Actual Speed:" + String.format("%.2f",minPower));
+                        telemetry.update();
+                    } else {
+                        leftMotor.setPower(-powerRatio*leftPower);
+                        rightMotor.setPower(powerRatio*rightPower);
+                        telemetry.addData("Actual Speed", "Actual Speed:" + String.format("%.2f",powerRatio));
+                        telemetry.update();
+                    }
+                }
+                leftMotor.setPower(0);
+                rightMotor.setPower(0);
+            } else {
+                telemetry.addData("Magnometer is Calibrated?", "No");
+                telemetry.update();
+                sleep(500);
+            }
+        } else {
+            telemetry.addData("NavX is Connected?", "No");
+            telemetry.update();
+            sleep(500);
+        }
+        sleep((int) turnSleepTime);
+    }
+
 }
