@@ -131,6 +131,7 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
         waitForStart();
 
         sleep(1000);
+
         encoderDrive(0.4, 300, 300, 1000);
         navXTurn(-40, 0.4, 0.5, 1000);
         encoderDrive(0.4, 4100, 4100, 1000);
@@ -143,6 +144,8 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
             telemetry.update();
         }
     }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public void encoderDrive(double speed, double leftTicks, double rightTicks, double sleepTime) {
         if (opModeIsActive()) {
