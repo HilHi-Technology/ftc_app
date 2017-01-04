@@ -30,6 +30,7 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
 TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.ftcrobotcontroller.R;
@@ -111,15 +112,12 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
 
         navx_device = AHRS.getInstance(hardwareMap.deviceInterfaceModule.get("dim"), 0, AHRS.DeviceDataType.kProcessedData);
 
-        telemetry.addData("Status", "Initialized");
-        telemetry.update();
         colorSensor = hardwareMap.colorSensor.get("color");
-
-        float hsvValues[] = {0F,0F,0F};
+        float hsvValues[] = {0F, 0F, 0F};
         final float values[] = hsvValues;
         final View relativeLayout = ((Activity) hardwareMap.appContext).findViewById(R.id.RelativeLayout);
-
         colorSensor.enableLed(false);
+        Color.RGBToHSV(colorSensor.red() * 8, colorSensor.green() * 8, colorSensor.blue() * 8, hsvValues);
 
         leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -129,28 +127,10 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
         leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        sleep(250);
-
-        VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters(R.id.cameraMonitorViewId);
-        parameters.vuforiaLicenseKey = "AVpZvhj/////AAAAGS4AanX+yU5toBr4URhwzTlcjMcTgpcgbIoseTYKxBoYxNobI6A5VxrfyfBiSEpEyk0RA0ynCqNIQbnpYg20ufD+Fg1eHR6sB+6BalZhvf6vnigBboPowdl+7k64fnboXbpzez157m7B6Yiegz9uygCQJZiDMzwcyz753xOxnKPh4LGtTaY2ErXJn0e46tNinSqyF5O6PiHyooUQPxleWWbqZ9ygGXspfCy3AqivZfw6OJn5L2l6He3JX89Kxprpi/EMhTYT5NXXzneIKYwjNaf4L0UShuZI3DgzLIx3+2QVIRaAP1X5iuWwMQxrj5BMRnvyRyZrTuGZNOTdPKc28MWTtyyOjwMf9yyQFcjWQzXF";
-        parameters.cameraDirection = VuforiaLocalizer.CameraDirection.BACK;
-        parameters.cameraMonitorFeedback = VuforiaLocalizer.Parameters.CameraMonitorFeedback.AXES;
-
-        VuforiaLocalizer vuforia = ClassFactory.createVuforiaLocalizer(parameters);
-        Vuforia.setHint(HINT.HINT_MAX_SIMULTANEOUS_IMAGE_TARGETS, 4);
-
-        VuforiaTrackables beacons = vuforia.loadTrackablesFromAsset("FTC_2016-17");
-        beacons.get(0).setName("Wheels");
-        beacons.get(1).setName("Tools");
-        beacons.get(2).setName("Lego");
-        beacons.get(3).setName("Gears");
-
-        colorSensor.enableLed(false);
-        Color.RGBToHSV(colorSensor.red() * 8, colorSensor.green() * 8, colorSensor.blue() * 8, hsvValues);
-        runtime.reset();
-
-        telemetry.addData("Status", "Stuff");
+        telemetry.addData("Status", "Init");
         telemetry.update();
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         waitForStart();
 
@@ -160,69 +140,16 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
         navXTurn(-40, 0.5, 1000);
         encoderDrive(0.4, 4100, 4100, 1000);
         navXOneTurn(0, 0.5, 1000);
+        vuforiaMove(0.2, 0.2, 0, 1000);
 
-        beacons.activate();
-
-        VuforiaTrackable firstImage = null;
-
-        leftMotor.setPower(-0.2);
-        rightMotor.setPower(-0.2);
-
-        telemetry.addData("Status", "Things");
-        telemetry.update();
-
-        while (opModeIsActive() && firstImage == null) {
-            for (VuforiaTrackable beacon : beacons) {
-                OpenGLMatrix pose = ((VuforiaTrackableDefaultListener) beacon.getListener()).getPose();
-
-                if (pose != null) {
-                    VectorF translation = pose.getTranslation();
-
-                    telemetry.addData(beacon.getName() + "-Translation", translation);
-
-                    double degreesToTurn = Math.toDegrees(Math.atan2(translation.get(1), translation.get(2)));
-
-                    telemetry.addData(beacon.getName() + "-Degrees", degreesToTurn);
-
-                    firstImage = beacon;
-                }
-            }
-            telemetry.update();
-        }
-
-        while (((VuforiaTrackableDefaultListener) firstImage.getListener()).getPose().getTranslation().get(1) > 0) {
-            leftMotor.setPower(-0.2);
-            rightMotor.setPower(-0.2);
-        }
-
-        leftMotor.setPower(0);
-        rightMotor.setPower(0);
-
-        while(true) {
-            telemetry.addData("Clear", colorSensor.alpha());
+        while (true) {
             telemetry.addData("Red", colorSensor.red());
-            telemetry.addData("Green", colorSensor.green());
             telemetry.addData("Blue", colorSensor.blue());
-            telemetry.addData("Hue", hsvValues[0]);
             telemetry.update();
-            relativeLayout.post(new Runnable() {
-                public void run() {
-                    relativeLayout.setBackgroundColor(Color.HSVToColor(0xff, values));
-                }
-            });
         }
     }
 
-
-    /**
-     * A simple utility that extracts positioning information from a transformation matrix
-     * and formats it in a form palatable to a human being.
-     */
-        /*
-    String format(OpenGLMatrix transformationMatrix) {
-        return transformationMatrix.formatAsTransform();
-    }
-        */
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public void encoderDrive(double speed, double leftTicks, double rightTicks, double sleepTime) {
         if (opModeIsActive()) {
@@ -250,7 +177,6 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
 
             sleep(250);
 
-            //runtime.reset();
             if (leftTicks == 0) {
                 leftMotor.setPower(0);
                 rightMotor.setPower(Math.abs(speed));
@@ -267,9 +193,6 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
                 rightMotor.setPower(speed);
                 leftMotor.setPower(speed);
             }
-
-            //leftMotor.setPower(speed);
-            //rightMotor.setPower(speed);
 
             if (rightTicks == 0) {
                 while (opModeIsActive() && (Math.abs(leftMotor.getCurrentPosition()) < Math.abs(leftMotor.getTargetPosition()))) {
@@ -300,6 +223,7 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
             sleep((int) sleepTime);
         }
     }
+
     public void navXTurn(float initialTarget, double maxPower, double turnSleepTime) {
         //Disable encoders, so navX can control without influence
         leftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -360,31 +284,6 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
 
                 leftMotor.setPower(0);
                 rightMotor.setPower(0);
-
-
-
-
-                /*if (turn < 0) {
-                    maxPower = -maxPower;
-                    minPower = -minPower;
-                }
-                while (Math.abs(navx_device.getYaw()) < Math.abs(turn)) {
-                    float powerRatio = ((Math.abs(turn) - Math.abs(navx_device.getYaw())) / Math.abs(turn)) * (float)maxPower;
-                    telemetry.addData("Turn Goal", "Turn:Yaw:Ratio " + String.format("%.2f : %.2f : %.2f",turn, navx_device.getYaw(), powerRatio));
-                    if (Math.abs(powerRatio) < Math.abs(minPower)) {
-                        leftMotor.setPower(-minPower);
-                        rightMotor.setPower(minPower);
-                        telemetry.addData("Actual Speed", "Actual Speed:" + String.format("%.2f",minPower));
-                        telemetry.update();
-                    } else {
-                        leftMotor.setPower(-powerRatio);
-                        rightMotor.setPower(powerRatio);
-                        telemetry.addData("Actual Speed", "Actual Speed:" + String.format("%.2f",powerRatio));
-                        telemetry.update();
-                    }
-                }
-                leftMotor.setPower(0);
-                rightMotor.setPower(0);*/
             } else {
                 telemetry.addData("Magnometer is Calibrated?", "No");
                 telemetry.update();
@@ -438,7 +337,7 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
                         powerRatio = -powerRatio;
                     }
                     telemetry.addLine("powerRatio " + String.format("%.2f", powerRatio));
-                    telemetry.update(); 
+                    telemetry.update();
                     if (Math.abs(powerRatio) < MIN_POWER) {
                         leftMotor.setPower(MIN_POWER * Math.signum(powerRatio) * (powerRatio < 0f ? 0f : 1f));
                         rightMotor.setPower(-MIN_POWER * Math.signum(powerRatio) * (powerRatio > 0f ? 0f : 1f));
@@ -460,35 +359,6 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
 
                 leftMotor.setPower(0);
                 rightMotor.setPower(0);
-
-
-                /*if (turn < 0) {
-                    maxPower = -maxPower;
-                    minPower = -minPower;
-                    rightPower = 1;
-                    leftPower = 0;
-                }
-                else {
-                    rightPower = 0;
-                    leftPower = 1;
-                }
-                while (Math.abs(navx_device.getYaw()) < Math.abs(turn)) {
-                    powerRatio = ((Math.abs(turn) - Math.abs(navx_device.getYaw())) / Math.abs(turn)) * (float)maxPower;
-                    telemetry.addData("Turn Goal", "Turn:Yaw:Ratio " + String.format("%.2f : %.2f : %.2f",turn, navx_device.getYaw(), powerRatio));
-                    if (Math.abs(powerRatio) < Math.abs(minPower)) {
-                        leftMotor.setPower(-minPower*leftPower);
-                        rightMotor.setPower(minPower*rightPower);
-                        telemetry.addData("Actual Speed", "Actual Speed:" + String.format("%.2f",minPower));
-                        telemetry.update();
-                    } else {
-                        leftMotor.setPower(-powerRatio*leftPower);
-                        rightMotor.setPower(powerRatio*rightPower);
-                        telemetry.addData("Actual Speed", "Actual Speed:" + String.format("%.2f",powerRatio));
-                        telemetry.update();
-                    }
-                }
-                leftMotor.setPower(0);
-                rightMotor.setPower(0);*/
             } else {
                 telemetry.addData("Magnometer is Calibrated?", "No");
                 telemetry.update();
@@ -502,4 +372,55 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
         sleep((int) turnSleepTime);
     }
 
+    public void vuforiaMove(double firstSpeed, double secondSpeed, float position, int wait) {
+
+        firstSpeed = -firstSpeed;
+        secondSpeed = -secondSpeed;
+
+        VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters(R.id.cameraMonitorViewId);
+        parameters.vuforiaLicenseKey = "AVpZvhj/////AAAAGS4AanX+yU5toBr4URhwzTlcjMcTgpcgbIoseTYKxBoYxNobI6A5VxrfyfBiSEpEyk0RA0ynCqNIQbnpYg20ufD+Fg1eHR6sB+6BalZhvf6vnigBboPowdl+7k64fnboXbpzez157m7B6Yiegz9uygCQJZiDMzwcyz753xOxnKPh4LGtTaY2ErXJn0e46tNinSqyF5O6PiHyooUQPxleWWbqZ9ygGXspfCy3AqivZfw6OJn5L2l6He3JX89Kxprpi/EMhTYT5NXXzneIKYwjNaf4L0UShuZI3DgzLIx3+2QVIRaAP1X5iuWwMQxrj5BMRnvyRyZrTuGZNOTdPKc28MWTtyyOjwMf9yyQFcjWQzXF";
+        parameters.cameraDirection = VuforiaLocalizer.CameraDirection.BACK;
+        parameters.cameraMonitorFeedback = VuforiaLocalizer.Parameters.CameraMonitorFeedback.AXES;
+
+        VuforiaLocalizer vuforia = ClassFactory.createVuforiaLocalizer(parameters);
+        Vuforia.setHint(HINT.HINT_MAX_SIMULTANEOUS_IMAGE_TARGETS, 4);
+
+        VuforiaTrackables beacons = vuforia.loadTrackablesFromAsset("FTC_2016-17");
+        beacons.get(0).setName("Wheels");
+        beacons.get(1).setName("Tools");
+        beacons.get(2).setName("Lego");
+        beacons.get(3).setName("Gears");
+
+        beacons.activate();
+
+        VuforiaTrackable firstImage = null;
+
+        leftMotor.setPower(firstSpeed);
+        rightMotor.setPower(firstSpeed);
+
+        telemetry.addData("Status", "Things");
+        telemetry.update();
+
+        while (opModeIsActive() && firstImage == null) {
+            for (VuforiaTrackable beacon : beacons) {
+                OpenGLMatrix pose = ((VuforiaTrackableDefaultListener) beacon.getListener()).getPose();
+                if (pose != null) {
+                    VectorF translation = pose.getTranslation();
+                    telemetry.addData(beacon.getName() + "-Translation", translation);
+                    double degreesToTurn = Math.toDegrees(Math.atan2(translation.get(1), translation.get(2)));
+                    telemetry.addData(beacon.getName() + "-Degrees", degreesToTurn);
+                    firstImage = beacon;
+                }
+            }
+            telemetry.update();
+        }
+        while (((VuforiaTrackableDefaultListener) firstImage.getListener()).getPose().getTranslation().get(1) > position) {
+            leftMotor.setPower(secondSpeed);
+            rightMotor.setPower(secondSpeed);
+        }
+        leftMotor.setPower(0);
+        rightMotor.setPower(0);
+
+        sleep(wait);
+    }
 }
