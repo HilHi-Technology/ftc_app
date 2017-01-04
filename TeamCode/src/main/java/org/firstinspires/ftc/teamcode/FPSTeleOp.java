@@ -91,8 +91,6 @@ public class FPSTeleOp extends OpMode
         pusher = hardwareMap.servo.get("push");
         arm = hardwareMap.dcMotor.get("arm");
 
-        buttonPusher = hardwareMap.servo.get("bp");
-
         arm.setDirection(DcMotorSimple.Direction.REVERSE);
         rightMotor.setDirection(DcMotor.Direction.REVERSE);
         spin1.setDirection(DcMotorSimple.Direction.REVERSE);

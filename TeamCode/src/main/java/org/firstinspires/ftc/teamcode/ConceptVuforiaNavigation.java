@@ -96,6 +96,8 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
     private ElapsedTime runtime = new ElapsedTime();
     private AHRS navx_device;
 
+    private final double MIN_POWER = 0.4;
+
     DcMotor leftMotor = null;
     DcMotor rightMotor = null;
     ColorSensor colorSensor;
@@ -122,8 +124,12 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
         leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
+        sleep(250);
+
         leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        sleep(250);
 
         VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters(R.id.cameraMonitorViewId);
         parameters.vuforiaLicenseKey = "AVpZvhj/////AAAAGS4AanX+yU5toBr4URhwzTlcjMcTgpcgbIoseTYKxBoYxNobI6A5VxrfyfBiSEpEyk0RA0ynCqNIQbnpYg20ufD+Fg1eHR6sB+6BalZhvf6vnigBboPowdl+7k64fnboXbpzez157m7B6Yiegz9uygCQJZiDMzwcyz753xOxnKPh4LGtTaY2ErXJn0e46tNinSqyF5O6PiHyooUQPxleWWbqZ9ygGXspfCy3AqivZfw6OJn5L2l6He3JX89Kxprpi/EMhTYT5NXXzneIKYwjNaf4L0UShuZI3DgzLIx3+2QVIRaAP1X5iuWwMQxrj5BMRnvyRyZrTuGZNOTdPKc28MWTtyyOjwMf9yyQFcjWQzXF";
@@ -148,12 +154,12 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
 
         waitForStart();
 
-        sleep(1000);
+        navx_device.zeroYaw();
 
         encoderDrive(0.4, 300, 300, 1000);
-        navXTurn(-40, 0.4, 0.5, 1000);
+        navXTurn(-40, 0.5, 1000);
         encoderDrive(0.4, 4100, 4100, 1000);
-        navXOneTurn(40, 0.4, 0.5, 1000);
+        navXOneTurn(0, 0.5, 1000);
 
         beacons.activate();
 
@@ -294,25 +300,76 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
             sleep((int) sleepTime);
         }
     }
-    public void navXTurn(float turn, double minPower, double maxPower, double turnSleepTime) {
+    public void navXTurn(float initialTarget, double maxPower, double turnSleepTime) {
+        //Disable encoders, so navX can control without influence
         leftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        //Sleep because encoders need it after mode change
         sleep(250);
-        float powerRatio = 1;
         if (navx_device.isConnected()) {
             telemetry.addData("NavX is Connected?", "Yes");
             if (navx_device.isMagnetometerCalibrated()) {
                 telemetry.addData("Magnometer is Calibrated?", "Yes");
-                navx_device.zeroYaw();
                 telemetry.addData("Zero Yaw?", "Yes");
                 telemetry.update();
                 sleep(500);
-                if (turn < 0) {
+
+                float initialYaw = navx_device.getYaw();
+                float totalDistance = initialYaw - initialTarget;
+
+                float altInitialYaw = initialYaw == 0 ? 180 : (180 * Math.signum(initialYaw)) - initialYaw;
+                float altInitialTarget = initialTarget == 0 ? 180 : (180 * Math.signum(initialTarget)) - initialTarget;
+                float altTotalDistance = altInitialYaw - altInitialTarget;
+
+                telemetry.addLine("totalDistance:altTotalDistance " + String.format("%.2f : %.2f",totalDistance, altTotalDistance));
+                telemetry.update();
+
+                boolean altTurn = false;
+                float distanceRemaining = totalDistance;
+                if (Math.abs(totalDistance) > Math.abs(altTotalDistance)) {
+                    altTurn = true;
+                    totalDistance = altTotalDistance;
+                    distanceRemaining = altTotalDistance;
+                }
+
+                float initialSign = Math.signum(distanceRemaining);
+
+                while (initialSign == Math.signum(distanceRemaining)) {
+                    float powerRatio = ((totalDistance - (totalDistance - distanceRemaining)) / Math.abs(totalDistance)) * (float)maxPower;
+                    if (altTurn) {
+                        powerRatio = -powerRatio;
+                    }
+                    if (Math.abs(powerRatio) < MIN_POWER) {
+                        leftMotor.setPower(MIN_POWER * Math.signum(powerRatio));
+                        rightMotor.setPower(-MIN_POWER * Math.signum(powerRatio));
+                    } else {
+                        leftMotor.setPower(powerRatio);
+                        rightMotor.setPower(-powerRatio);
+                    }
+
+                    telemetry.addLine("distanceRemaining:navx_getyaw:powerRatio " + String.format("%.2f : %.2f",distanceRemaining, navx_device.getYaw(), powerRatio));
+                    telemetry.update();
+
+                    if (altTurn) {
+                        float altCurrentYaw = navx_device.getYaw() == 0 ? 180 : (180 * Math.signum(navx_device.getYaw())) - navx_device.getYaw();
+                        distanceRemaining = altCurrentYaw - altInitialTarget;
+                    } else {
+                        distanceRemaining = navx_device.getYaw() - initialTarget;
+                    }
+                }
+
+                leftMotor.setPower(0);
+                rightMotor.setPower(0);
+
+
+
+
+                /*if (turn < 0) {
                     maxPower = -maxPower;
                     minPower = -minPower;
                 }
                 while (Math.abs(navx_device.getYaw()) < Math.abs(turn)) {
-                    powerRatio = ((Math.abs(turn) - Math.abs(navx_device.getYaw())) / Math.abs(turn)) * (float)maxPower;
+                    float powerRatio = ((Math.abs(turn) - Math.abs(navx_device.getYaw())) / Math.abs(turn)) * (float)maxPower;
                     telemetry.addData("Turn Goal", "Turn:Yaw:Ratio " + String.format("%.2f : %.2f : %.2f",turn, navx_device.getYaw(), powerRatio));
                     if (Math.abs(powerRatio) < Math.abs(minPower)) {
                         leftMotor.setPower(-minPower);
@@ -327,7 +384,7 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
                     }
                 }
                 leftMotor.setPower(0);
-                rightMotor.setPower(0);
+                rightMotor.setPower(0);*/
             } else {
                 telemetry.addData("Magnometer is Calibrated?", "No");
                 telemetry.update();
@@ -341,13 +398,10 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
         sleep((int) turnSleepTime);
     }
 
-    public void navXOneTurn(float turn, double minPower, double maxPower, double turnSleepTime) {
+    public void navXOneTurn(float initialTarget, double maxPower, double turnSleepTime) {
         leftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         sleep(250);
-        float powerRatio = 1;
-        float rightPower = 1;
-        float leftPower = 1;
         if (navx_device.isConnected()) {
             telemetry.addData("NavX is Connected?", "Yes");
             if (navx_device.isMagnetometerCalibrated()) {
@@ -356,7 +410,59 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
                 telemetry.addData("Zero Yaw?", "Yes");
                 telemetry.update();
                 sleep(500);
-                if (turn < 0) {
+
+
+                float initialYaw = navx_device.getYaw();
+                float totalDistance = initialYaw - initialTarget;
+
+                float altInitialYaw = initialYaw == 0 ? 180 : (180 * Math.signum(initialYaw)) - initialYaw;
+                float altInitialTarget = initialTarget == 0 ? 180 : (180 * Math.signum(initialTarget)) - initialTarget;
+                float altTotalDistance = altInitialYaw - altInitialTarget;
+
+                telemetry.addLine("totalDistance:altTotalDistance " + String.format("%.2f : %.2f",totalDistance, altTotalDistance));
+                telemetry.update();
+
+                boolean altTurn = false;
+                float distanceRemaining = totalDistance;
+                if (Math.abs(totalDistance) > Math.abs(altTotalDistance)) {
+                    altTurn = true;
+                    totalDistance = altTotalDistance;
+                    distanceRemaining = altTotalDistance;
+                }
+
+                float initialSign = Math.signum(distanceRemaining);
+
+                while (initialSign == Math.signum(distanceRemaining)) {
+                    float powerRatio = ((totalDistance - (totalDistance - distanceRemaining)) / Math.abs(totalDistance)) * (float)maxPower;
+                    if (altTurn) {
+                        powerRatio = -powerRatio;
+                    }
+                    telemetry.addLine("powerRatio " + String.format("%.2f", powerRatio));
+                    telemetry.update(); 
+                    if (Math.abs(powerRatio) < MIN_POWER) {
+                        leftMotor.setPower(MIN_POWER * Math.signum(powerRatio) * (powerRatio < 0f ? 0f : 1f));
+                        rightMotor.setPower(-MIN_POWER * Math.signum(powerRatio) * (powerRatio > 0f ? 0f : 1f));
+                    } else {
+                        leftMotor.setPower(powerRatio * (powerRatio < 0f ? 0f : 1f));
+                        rightMotor.setPower(-powerRatio * (powerRatio > 0f ? 0f : 1f));
+                    }
+
+                    //telemetry.addLine("distanceRemaining:navx_getyaw:powerRatio " + String.format("%.2f : %.2f",distanceRemaining, navx_device.getYaw(), powerRatio));
+                    //telemetry.update();
+
+                    if (altTurn) {
+                        float altCurrentYaw = navx_device.getYaw() == 0 ? 180 : (180 * Math.signum(navx_device.getYaw())) - navx_device.getYaw();
+                        distanceRemaining = altCurrentYaw - altInitialTarget;
+                    } else {
+                        distanceRemaining = navx_device.getYaw() - initialTarget;
+                    }
+                }
+
+                leftMotor.setPower(0);
+                rightMotor.setPower(0);
+
+
+                /*if (turn < 0) {
                     maxPower = -maxPower;
                     minPower = -minPower;
                     rightPower = 1;
@@ -382,7 +488,7 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
                     }
                 }
                 leftMotor.setPower(0);
-                rightMotor.setPower(0);
+                rightMotor.setPower(0);*/
             } else {
                 telemetry.addData("Magnometer is Calibrated?", "No");
                 telemetry.update();
