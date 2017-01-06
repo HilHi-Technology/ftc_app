@@ -136,11 +136,15 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
 
         navx_device.zeroYaw();
 
-        encoderDrive(0.4, 300, 300, 1000);
+        navXOneTurn(90, 0.5, 1000);
+        navXOneTurn(-60, 0.5, 1000);
+        navXOneTurn(175, 0.5, 1000);
+
+        /*encoderDrive(0.4, 300, 300, 1000);
         navXTurn(-40, 0.5, 1000);
         encoderDrive(0.4, 4100, 4100, 1000);
         navXOneTurn(0, 0.5, 1000);
-        vuforiaMove(0.2, 0.2, 0, 1000);
+        vuforiaMove(0.2, 0.2, 0, 1000);*/
 
         while (true) {
             telemetry.addData("Red", colorSensor.red());
@@ -305,7 +309,6 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
             telemetry.addData("NavX is Connected?", "Yes");
             if (navx_device.isMagnetometerCalibrated()) {
                 telemetry.addData("Magnometer is Calibrated?", "Yes");
-                navx_device.zeroYaw();
                 telemetry.addData("Zero Yaw?", "Yes");
                 telemetry.update();
                 sleep(500);
@@ -336,7 +339,7 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
                     if (altTurn) {
                         powerRatio = -powerRatio;
                     }
-                    telemetry.addLine("powerRatio " + String.format("%.2f", powerRatio));
+                    telemetry.addLine("power " + String.format("%.2f", powerRatio * (powerRatio < 0f ? 0f : 1f)));
                     telemetry.update();
                     if (Math.abs(powerRatio) < MIN_POWER) {
                         leftMotor.setPower(MIN_POWER * Math.signum(powerRatio) * (powerRatio < 0f ? 0f : 1f));
