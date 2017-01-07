@@ -136,15 +136,12 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
 
         navx_device.zeroYaw();
 
-        navXOneTurn(90, 0.5, 1000);
-        navXOneTurn(-60, 0.5, 1000);
-        navXOneTurn(175, 0.5, 1000);
-
-        /*encoderDrive(0.4, 300, 300, 1000);
+        encoderDrive(0.4, 300, 300, 1000);
         navXTurn(-40, 0.5, 1000);
         encoderDrive(0.4, 4100, 4100, 1000);
+        sleep(10000);
         navXOneTurn(0, 0.5, 1000);
-        vuforiaMove(0.2, 0.2, 0, 1000);*/
+        vuforiaMove(0.2, 0.2, 0, 1000);
 
         while (true) {
             telemetry.addData("Red", colorSensor.red());

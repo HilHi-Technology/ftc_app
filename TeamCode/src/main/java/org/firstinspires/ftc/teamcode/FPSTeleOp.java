@@ -71,9 +71,6 @@ public class FPSTeleOp extends OpMode
 
     private Servo pusher = null;
 
-    private boolean aWasPushed = false;
-    private boolean pusherOut = false;
-
     private final float turnMultiplier = 0.5f;
 
     /*
@@ -138,7 +135,6 @@ public class FPSTeleOp extends OpMode
         boolean shootOut = gamepad1.right_bumper;
         boolean suckIn = gamepad1.left_bumper;
         float pushOut = gamepad1.left_trigger;
-        boolean buttonPush = gamepad1.a;
 
 
         telemetry.addData("ForwardStick", forwardStick);
@@ -195,18 +191,13 @@ public class FPSTeleOp extends OpMode
             spin2.setPower(0);
         }
 
-        if (buttonPush && !aWasPushed) {
-            pusherOut = !pusherOut;
-            aWasPushed = true;
-        } else if (!buttonPush && aWasPushed) {
-            aWasPushed = false;
-        }
-
-        if (pusherOut) {
+        if (gamepad1.x) {
+            pusher.setPosition(0);
+        } else if (gamepad1.b) {
             pusher.setPosition(1);
         } else {
-            pusher.setPosition(0);
-	}
+            pusher.setPosition(0.5);
+        }
 
         if (gamepad1.y) {
             arm.setPower(1);
