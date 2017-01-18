@@ -44,6 +44,7 @@ import com.vuforia.HINT;
 import com.vuforia.Vuforia;
 import android.app.Activity;
 import android.graphics.Color;
+import android.util.Log;
 import android.view.View;
 
 import com.kauailabs.navx.ftc.AHRS;
@@ -103,12 +104,14 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
     DcMotor rightMotor = null;
     ColorSensor colorSensor;
 
+    private static final String tag = "Autonomous";
+
     @Override
     public void runOpMode() {
         leftMotor = hardwareMap.dcMotor.get("lm");
         rightMotor = hardwareMap.dcMotor.get("rm");
 
-        leftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        rightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
         navx_device = AHRS.getInstance(hardwareMap.deviceInterfaceModule.get("dim"), 0, AHRS.DeviceDataType.kProcessedData);
 
@@ -119,13 +122,8 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
         colorSensor.enableLed(false);
         Color.RGBToHSV(colorSensor.red() * 8, colorSensor.green() * 8, colorSensor.blue() * 8, hsvValues);
 
-        leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        sleep(250);
-
-        leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         telemetry.addData("Status", "Init");
         telemetry.update();
@@ -139,7 +137,6 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
         encoderDrive(0.4, 300, 300, 1000);
         navXTurn(-40, 0.5, 1000);
         encoderDrive(0.4, 4100, 4100, 1000);
-        sleep(10000);
         navXOneTurn(0, 0.5, 1000);
         vuforiaMove(0.2, 0.2, 0, 1000);
 
@@ -158,11 +155,6 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
             leftTicks = -leftTicks;
             rightTicks = -rightTicks;
 
-            leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-            sleep(250);
-
             leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
@@ -173,8 +165,8 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
 
             sleep(250);
 
-            leftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            rightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            leftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            rightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
             sleep(250);
 
@@ -212,6 +204,9 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
                     telemetry.addData("Path1", "Running to %7d :%7d", (int) leftTicks, (int) rightTicks);
                     telemetry.addData("Path2", "Running at %7d :%7d", leftMotor.getCurrentPosition(), rightMotor.getCurrentPosition());
                     telemetry.update();
+                    Log.i(tag, "Running to " + leftTicks + " :" + rightTicks);
+                    Log.i(tag, "Running at " + leftMotor.getCurrentPosition() + " :" + rightMotor.getCurrentPosition());
+
                 }
             }
 
@@ -220,6 +215,11 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
 
             leftMotor.setPower(0);
             rightMotor.setPower(0);
+
+            sleep(250);
+
+            leftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            rightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
             sleep((int) sleepTime);
         }
@@ -265,11 +265,11 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
                         powerRatio = -powerRatio;
                     }
                     if (Math.abs(powerRatio) < MIN_POWER) {
-                        leftMotor.setPower(MIN_POWER * Math.signum(powerRatio));
-                        rightMotor.setPower(-MIN_POWER * Math.signum(powerRatio));
+                        leftMotor.setPower(-MIN_POWER * Math.signum(powerRatio));
+                        rightMotor.setPower(MIN_POWER * Math.signum(powerRatio));
                     } else {
-                        leftMotor.setPower(powerRatio);
-                        rightMotor.setPower(-powerRatio);
+                        leftMotor.setPower(-powerRatio);
+                        rightMotor.setPower(powerRatio);
                     }
 
                     telemetry.addLine("distanceRemaining:navx_getyaw:powerRatio " + String.format("%.2f : %.2f",distanceRemaining, navx_device.getYaw(), powerRatio));
@@ -339,11 +339,11 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
                     telemetry.addLine("power " + String.format("%.2f", powerRatio * (powerRatio < 0f ? 0f : 1f)));
                     telemetry.update();
                     if (Math.abs(powerRatio) < MIN_POWER) {
-                        leftMotor.setPower(MIN_POWER * Math.signum(powerRatio) * (powerRatio < 0f ? 0f : 1f));
-                        rightMotor.setPower(-MIN_POWER * Math.signum(powerRatio) * (powerRatio > 0f ? 0f : 1f));
+                        leftMotor.setPower(-MIN_POWER * Math.signum(powerRatio) * (powerRatio < 0f ? 0f : 1f));
+                        rightMotor.setPower(MIN_POWER * Math.signum(powerRatio) * (powerRatio > 0f ? 0f : 1f));
                     } else {
-                        leftMotor.setPower(powerRatio * (powerRatio < 0f ? 0f : 1f));
-                        rightMotor.setPower(-powerRatio * (powerRatio > 0f ? 0f : 1f));
+                        leftMotor.setPower(-powerRatio * (powerRatio < 0f ? 0f : 1f));
+                        rightMotor.setPower(powerRatio * (powerRatio > 0f ? 0f : 1f));
                     }
 
                     //telemetry.addLine("distanceRemaining:navx_getyaw:powerRatio " + String.format("%.2f : %.2f",distanceRemaining, navx_device.getYaw(), powerRatio));
@@ -373,10 +373,6 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
     }
 
     public void vuforiaMove(double firstSpeed, double secondSpeed, float position, int wait) {
-
-        firstSpeed = -firstSpeed;
-        secondSpeed = -secondSpeed;
-
         VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters(R.id.cameraMonitorViewId);
         parameters.vuforiaLicenseKey = "AVpZvhj/////AAAAGS4AanX+yU5toBr4URhwzTlcjMcTgpcgbIoseTYKxBoYxNobI6A5VxrfyfBiSEpEyk0RA0ynCqNIQbnpYg20ufD+Fg1eHR6sB+6BalZhvf6vnigBboPowdl+7k64fnboXbpzez157m7B6Yiegz9uygCQJZiDMzwcyz753xOxnKPh4LGtTaY2ErXJn0e46tNinSqyF5O6PiHyooUQPxleWWbqZ9ygGXspfCy3AqivZfw6OJn5L2l6He3JX89Kxprpi/EMhTYT5NXXzneIKYwjNaf4L0UShuZI3DgzLIx3+2QVIRaAP1X5iuWwMQxrj5BMRnvyRyZrTuGZNOTdPKc28MWTtyyOjwMf9yyQFcjWQzXF";
         parameters.cameraDirection = VuforiaLocalizer.CameraDirection.BACK;
