@@ -168,6 +168,56 @@ public abstract class EnhancedLinearOpMode extends LinearOpMode {
         }
     }
 
+    public void encoderYawStraight(double speed, double ticks, double adjustRate, double sleepTime) {
+        if (opModeIsActive()) {
+
+            float startYaw = navx_device.getYaw();
+            speed *= 0.8;
+            double startTime = runtime.seconds();
+
+            leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+            sleep(250);
+
+            leftMotor.setTargetPosition((int) ticks);
+            rightMotor.setTargetPosition((int) ticks);
+
+            sleep(250);
+
+            leftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            rightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+            sleep(250);
+
+            rightMotor.setPower(speed);
+            leftMotor.setPower(speed);
+
+            int avgEncoder = 0;
+
+            while (opModeIsActive() && avgEncoder < ticks) {
+                float yawOffset = startYaw - navx_device.getYaw();
+                leftMotor.setPower(speed + (yawOffset * adjustRate));
+                rightMotor.setPower(speed - (yawOffset * adjustRate));
+
+                avgEncoder = (leftMotor.getCurrentPosition() + rightMotor.getCurrentPosition()) / 2;
+            }
+
+            leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+            leftMotor.setPower(0);
+            rightMotor.setPower(0);
+
+            sleep(250);
+
+            leftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            rightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+            sleep((int) sleepTime);
+        }
+    }
+
     public void navXTurn(float initialTarget, double maxPower, double turnSleepTime) {
         //Disable encoders, so navX can control without influence
         leftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
