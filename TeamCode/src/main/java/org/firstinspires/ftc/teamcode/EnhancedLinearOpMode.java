@@ -339,4 +339,23 @@ public abstract class EnhancedLinearOpMode extends LinearOpMode {
         sleep(wait);
     }
 
+    public void beaconPress(int redCheck, int blueCheck, int pressAmount, int distanceRedBlue) {
+        pusher.setPosition(0);
+        while (colorSensor.red() < redCheck && colorSensor.blue() < blueCheck) {
+            telemetry.addData("Red", colorSensor.red());
+            telemetry.addData("Blue", colorSensor.blue());
+            telemetry.update();
+        }
+        pusher.setPosition(0.5);
+        if (colorSensor.red() >= redCheck) {
+            pusher.setPosition(0);
+            sleep(pressAmount);
+        } else if (colorSensor.blue() >= blueCheck) {
+            vuforiaMove(0.1, 0.1, distanceRedBlue, 1000);
+            pusher.setPosition(0);
+            sleep(pressAmount);
+        }
+        pusher.setPosition(0.5);
+    }
+
 }

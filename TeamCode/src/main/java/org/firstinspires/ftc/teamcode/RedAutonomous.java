@@ -32,7 +32,6 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 package org.firstinspires.ftc.teamcode;
-
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 @Autonomous(name="Red Autonomous", group ="Autonomous")
@@ -46,24 +45,7 @@ public class RedAutonomous extends EnhancedLinearOpMode {
         encoderDrive(0.2, 4750, 4750, 1000);
         navXTurn(-5, 0.3, 1000);
         vuforiaMove(0.1, 0.1, 100, 1000);
+        beaconPress(2, 2, 5000, -25);
 
-        pusher.setPosition(0);
-        while (colorSensor.red() < 2 && colorSensor.blue() < 2) {
-            telemetry.addData("Red", colorSensor.red());
-            telemetry.addData("Blue", colorSensor.blue());
-            telemetry.update();
-        }
-        pusher.setPosition(0.5);
-
-        if (colorSensor.red() >= 2) {
-            pusher.setPosition(0);
-            sleep(5000);
-        } else if (colorSensor.blue() >= 2) {
-            vuforiaMove(0.1, 0.1, -25, 1000);
-            pusher.setPosition(0);
-            sleep(5000);
-        }
-
-        pusher.setPosition(0.5);
     }
 }
