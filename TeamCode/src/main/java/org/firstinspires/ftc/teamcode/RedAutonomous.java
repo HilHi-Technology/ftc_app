@@ -41,10 +41,10 @@ public class RedAutonomous extends EnhancedLinearOpMode {
     public void startOpMode() {
 
         encoderYawStraight(0.5, 300, 0.01, 1000);
-        navXTurn(-35, 0.6, 1000);
+        navXTurn(-35, 0.6f, 1000);
         encoderYawStraight(0.5, 2250, 0.01, 1000);
-        navXTurn(-5, 0.6, 1000);
-        vuforiaMove(0.1, 0.1, 100, 1000);
+        navXTurn(-5, 0.6f, 1000);
+        vuforiaMove(0.1, 0.1, 100, 1, 1000);
         beaconPress(2, 2, 5000, -25);
 
     }

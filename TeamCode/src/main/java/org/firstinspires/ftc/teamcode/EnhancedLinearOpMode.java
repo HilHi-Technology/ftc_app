@@ -23,15 +23,19 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by Lego on 2/3/2017.
  */
 
 public abstract class EnhancedLinearOpMode extends LinearOpMode {
 
-    public final double MIN_POWER_STRAIGHT = 0.25;
-    public final double MIN_POWER_TURN = 0.4;
-    public final int TICKS_START_SLOWDOWN = 500;
+    public final float MIN_POWER_STRAIGHT = 0.25f;
+    public final float MIN_POWER_TURN = 0.4f;
+    public final int STRAIGHT_START_SLOWDOWN = 500;
+    public final float TURN_START_SLOWDOWN = 20f;
 
     public ElapsedTime runtime = new ElapsedTime();
     public AHRS navx_device;
@@ -103,82 +107,6 @@ public abstract class EnhancedLinearOpMode extends LinearOpMode {
 
     public abstract void startOpMode();
 
-    public void encoderDrive(double speed, double leftTicks, double rightTicks, double sleepTime) {
-        if (opModeIsActive()) {
-
-            leftTicks = -leftTicks;
-            rightTicks = -rightTicks;
-
-            leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-            sleep(250);
-
-            leftMotor.setTargetPosition((int) leftTicks);
-            rightMotor.setTargetPosition((int) rightTicks);
-
-            sleep(250);
-
-            leftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            rightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-            sleep(250);
-
-            if (leftTicks == 0) {
-                leftMotor.setPower(0);
-                rightMotor.setPower(Math.abs(speed));
-            } else if (rightTicks == 0) {
-                leftMotor.setPower(Math.abs(speed));
-                rightMotor.setPower(Math.abs(0));
-            } else if (leftTicks > rightTicks) {
-                leftMotor.setPower(Math.abs(speed));
-                rightMotor.setPower(Math.abs((rightTicks / leftTicks) * speed));
-            } else if (rightTicks > leftTicks) {
-                leftMotor.setPower(Math.abs((leftTicks / rightTicks) * speed));
-                rightMotor.setPower(Math.abs(speed));
-            } else if (rightTicks == leftTicks) {
-                rightMotor.setPower(speed);
-                leftMotor.setPower(speed);
-            }
-
-            if (rightTicks == 0) {
-                while (opModeIsActive() && (Math.abs(leftMotor.getCurrentPosition()) < Math.abs(leftMotor.getTargetPosition()))) {
-                    telemetry.addData("Path1", "Running to %7d :%7d", (int) leftTicks, (int) rightTicks);
-                    telemetry.addData("Path2", "Running at %7d :%7d", leftMotor.getCurrentPosition(), rightMotor.getCurrentPosition());
-                    telemetry.update();
-                }
-            } else if (leftTicks == 0) {
-                while (opModeIsActive() && (Math.abs(rightMotor.getCurrentPosition()) < Math.abs(rightMotor.getTargetPosition()))) {
-                    telemetry.addData("Path1", "Running to %7d :%7d", (int) leftTicks, (int) rightTicks);
-                    telemetry.addData("Path2", "Running at %7d :%7d", leftMotor.getCurrentPosition(), rightMotor.getCurrentPosition());
-                    telemetry.update();
-                }
-            } else {
-                while (opModeIsActive() && (Math.abs(leftMotor.getCurrentPosition()) < Math.abs(leftMotor.getTargetPosition())) && (Math.abs(rightMotor.getCurrentPosition()) < Math.abs(rightMotor.getTargetPosition()))) {
-                    telemetry.addData("Path1", "Running to %7d :%7d", (int) leftTicks, (int) rightTicks);
-                    telemetry.addData("Path2", "Running at %7d :%7d", leftMotor.getCurrentPosition(), rightMotor.getCurrentPosition());
-                    telemetry.update();
-                    Log.i(tag, "Running to " + leftTicks + " :" + rightTicks);
-                    Log.i(tag, "Running at " + leftMotor.getCurrentPosition() + " :" + rightMotor.getCurrentPosition());
-
-                }
-            }
-
-            leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-            leftMotor.setPower(0);
-            rightMotor.setPower(0);
-
-            sleep(250);
-
-            leftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            rightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-            sleep((int) sleepTime);
-        }
-    }
-
     public void encoderYawStraight(double speed, double ticks, double adjustRate, double sleepTime) {
         if (opModeIsActive()) {
 
@@ -195,7 +123,7 @@ public abstract class EnhancedLinearOpMode extends LinearOpMode {
             double slowdown = 0;
 
             while (opModeIsActive() && avgEncoder - startPos < ticks) {
-                double percentCompleted = (avgEncoder - startPos - (ticks - TICKS_START_SLOWDOWN)) / TICKS_START_SLOWDOWN;
+                double percentCompleted = (avgEncoder - startPos - (ticks - STRAIGHT_START_SLOWDOWN)) / STRAIGHT_START_SLOWDOWN;
                 if (percentCompleted >= 0) {
                     slowdown = percentCompleted * (speed - MIN_POWER_STRAIGHT);
                 } else {
@@ -220,7 +148,7 @@ public abstract class EnhancedLinearOpMode extends LinearOpMode {
         }
     }
 
-    public void navXTurn(float initialTarget, double maxPower, double turnSleepTime) {
+    public void navXTurn(float initialTarget, float maxPower, double turnSleepTime) {
         if (navx_device.isConnected()) {
             telemetry.addData("NavX is Connected?", "Yes");
             if (navx_device.isMagnetometerCalibrated()) {
@@ -248,21 +176,25 @@ public abstract class EnhancedLinearOpMode extends LinearOpMode {
                 }
 
                 float initialSign = Math.signum(distanceRemaining);
+                float altTurnSwitchDirection = 1;
+                float slowdown = 0;
+
+                if (altTurn) {
+                    altTurnSwitchDirection = -1;
+                }
 
                 while (initialSign == Math.signum(distanceRemaining)) {
-                    float powerRatio = ((totalDistance - (totalDistance - distanceRemaining)) / Math.abs(totalDistance)) * (float)maxPower;
-                    if (altTurn) {
-                        powerRatio = -powerRatio;
-                    }
-                    if (Math.abs(powerRatio) < MIN_POWER_TURN) {
-                        leftMotor.setPower(-MIN_POWER_TURN * Math.signum(powerRatio));
-                        rightMotor.setPower(MIN_POWER_TURN * Math.signum(powerRatio));
+                    float percentComplete = 1 - (Math.abs(distanceRemaining) / TURN_START_SLOWDOWN);
+                    if (Math.abs(distanceRemaining) < TURN_START_SLOWDOWN) {
+                        slowdown = percentComplete * (maxPower - MIN_POWER_TURN);
                     } else {
-                        leftMotor.setPower(-powerRatio);
-                        rightMotor.setPower(powerRatio);
+                        slowdown = 0;
                     }
 
-                    telemetry.addLine("distanceRemaining:navx_getyaw:powerRatio " + String.format("%.2f : %.2f",distanceRemaining, navx_device.getYaw(), powerRatio));
+                    leftMotor.setPower(altTurnSwitchDirection * (-maxPower - slowdown) * Math.signum(distanceRemaining));
+                    rightMotor.setPower(altTurnSwitchDirection * (maxPower - slowdown) * Math.signum(distanceRemaining));
+
+                    telemetry.addLine("distanceRemaining:navx_getyaw:powerRatio " + String.format("%.2f : %.2f",distanceRemaining, navx_device.getYaw(), slowdown));
                     telemetry.update();
 
                     if (altTurn) {
@@ -288,7 +220,7 @@ public abstract class EnhancedLinearOpMode extends LinearOpMode {
         sleep((int) turnSleepTime);
     }
 
-    public void vuforiaMove(double firstSpeed, double secondSpeed, float position, int wait) {
+    public void vuforiaMove(double firstSpeed, double secondSpeed, float position, int imageNumber, int wait) {
         VuforiaTrackables beacons = vuforia.loadTrackablesFromAsset("FTC_2016-17");
         beacons.get(0).setName("Wheels");
         beacons.get(1).setName("Tools");
@@ -299,7 +231,7 @@ public abstract class EnhancedLinearOpMode extends LinearOpMode {
 
         sleep(1000);
 
-        VuforiaTrackable firstImage = null;
+        VuforiaTrackable image = null;
 
         leftMotor.setPower(firstSpeed);
         rightMotor.setPower(firstSpeed);
@@ -307,7 +239,9 @@ public abstract class EnhancedLinearOpMode extends LinearOpMode {
         telemetry.addData("Status", "Things");
         telemetry.update();
 
-        while (opModeIsActive() && firstImage == null) {
+        List<Integer> foundImages = new ArrayList<Integer>();
+
+        while (opModeIsActive() && foundImages.size() < imageNumber) {
             for (VuforiaTrackable beacon : beacons) {
                 OpenGLMatrix pose = ((VuforiaTrackableDefaultListener) beacon.getListener()).getPose();
                 if (pose != null) {
@@ -315,7 +249,10 @@ public abstract class EnhancedLinearOpMode extends LinearOpMode {
                     telemetry.addData(beacon.getName() + "-Translation", translation);
                     double degreesToTurn = Math.toDegrees(Math.atan2(translation.get(1), translation.get(2)));
                     telemetry.addData(beacon.getName() + "-Degrees", degreesToTurn);
-                    firstImage = beacon;
+                    int beaconIndex = beacons.indexOf(beacon);
+                    if (!foundImages.contains(beaconIndex)) {
+                        foundImages.add(beaconIndex);
+                    }
                 }
             }
             telemetry.update();
@@ -324,7 +261,7 @@ public abstract class EnhancedLinearOpMode extends LinearOpMode {
         if (secondSpeed < 0) {
             reverseDirection = -1;
         }
-        while (reverseDirection * ((VuforiaTrackableDefaultListener) firstImage.getListener()).getPose().getTranslation().get(1) > reverseDirection * position) {
+        while (reverseDirection * ((VuforiaTrackableDefaultListener) beacons.get(foundImages.get(imageNumber - 1)).getListener()).getPose().getTranslation().get(1) > reverseDirection * position) {
             leftMotor.setPower(secondSpeed);
             rightMotor.setPower(secondSpeed);
         }
@@ -348,7 +285,7 @@ public abstract class EnhancedLinearOpMode extends LinearOpMode {
             pusher.setPosition(0);
             sleep(pressAmount);
         } else if (colorSensor.blue() >= blueCheck) {
-            vuforiaMove(0.1, 0.1, distanceRedBlue, 1000);
+            vuforiaMove(0.1, 0.1, distanceRedBlue, 1, 1000);
             pusher.setPosition(0);
             sleep(pressAmount);
         }
