@@ -29,7 +29,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 
 public abstract class EnhancedLinearOpMode extends LinearOpMode {
 
-    public final double MIN_POWER = 0.3;
+    public final double MIN_POWER_STRAIGHT = 0.25;
+    public final double MIN_POWER_TURN = 0.4;
+    public final int TICKS_START_SLOWDOWN = 500;
 
     public ElapsedTime runtime = new ElapsedTime();
     public AHRS navx_device;
@@ -53,7 +55,7 @@ public abstract class EnhancedLinearOpMode extends LinearOpMode {
         pusher = hardwareMap.servo.get("push");
         pusher.setPosition(0.5);
 
-        rightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
         navx_device = AHRS.getInstance(hardwareMap.deviceInterfaceModule.get("dim"), 0, AHRS.DeviceDataType.kProcessedData);
 
@@ -63,6 +65,11 @@ public abstract class EnhancedLinearOpMode extends LinearOpMode {
         final View relativeLayout = ((Activity) hardwareMap.appContext).findViewById(com.qualcomm.ftcrobotcontroller.R.id.RelativeLayout);
         colorSensor.enableLed(false);
         Color.RGBToHSV(colorSensor.red() * 8, colorSensor.green() * 8, colorSensor.blue() * 8, hsvValues);
+
+        leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        sleep(250);
 
         leftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -78,14 +85,18 @@ public abstract class EnhancedLinearOpMode extends LinearOpMode {
         vuforia = ClassFactory.createVuforiaLocalizer(parameters);
         Vuforia.setHint(HINT.HINT_MAX_SIMULTANEOUS_IMAGE_TARGETS, 4);
 
+        boolean hasZeroed = false;
+
         while (!opModeIsActive()) {
             telemetry.addData("Time Since Init", runtime.seconds());
             telemetry.update();
+            if (runtime.seconds() > 25 && !hasZeroed) {
+                hasZeroed = true;
+                navx_device.zeroYaw();
+            }
         }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-        navx_device.zeroYaw();
 
         startOpMode();
     }
@@ -172,58 +183,44 @@ public abstract class EnhancedLinearOpMode extends LinearOpMode {
         if (opModeIsActive()) {
 
             float startYaw = navx_device.getYaw();
-            speed *= 0.8;
-            double startTime = runtime.seconds();
-
-            leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-            sleep(250);
-
-            leftMotor.setTargetPosition((int) ticks);
-            rightMotor.setTargetPosition((int) ticks);
-
-            sleep(250);
-
-            leftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            rightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-            sleep(250);
+            if (speed > 0.8) {
+                speed = 0.8;
+            }
+            int startPos = (leftMotor.getCurrentPosition() + rightMotor.getCurrentPosition()) / 2;
 
             rightMotor.setPower(speed);
             leftMotor.setPower(speed);
 
             int avgEncoder = 0;
+            double slowdown = 0;
 
-            while (opModeIsActive() && avgEncoder < ticks) {
+            while (opModeIsActive() && avgEncoder - startPos < ticks) {
+                double percentCompleted = (avgEncoder - startPos - (ticks - TICKS_START_SLOWDOWN)) / TICKS_START_SLOWDOWN;
+                if (percentCompleted >= 0) {
+                    slowdown = percentCompleted * (speed - MIN_POWER_STRAIGHT);
+                } else {
+                    slowdown = 0;
+                }
                 float yawOffset = startYaw - navx_device.getYaw();
-                leftMotor.setPower(speed + (yawOffset * adjustRate));
-                rightMotor.setPower(speed - (yawOffset * adjustRate));
+                leftMotor.setPower((speed - slowdown) + (yawOffset * adjustRate));
+                rightMotor.setPower((speed - slowdown) - (yawOffset * adjustRate));
 
                 avgEncoder = (leftMotor.getCurrentPosition() + rightMotor.getCurrentPosition()) / 2;
-            }
 
-            leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                telemetry.addData("Path1", "Running to %7d", avgEncoder - startPos);
+                telemetry.addData("Path2", "Running at %7d :%7d", leftMotor.getCurrentPosition(), rightMotor.getCurrentPosition());
+                telemetry.addData("Speed", "Running at speed %7s : %7s", leftMotor.getPower(), rightMotor.getPower());
+                telemetry.update();
+            }
 
             leftMotor.setPower(0);
             rightMotor.setPower(0);
-
-            sleep(250);
-
-            leftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            rightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
             sleep((int) sleepTime);
         }
     }
 
     public void navXTurn(float initialTarget, double maxPower, double turnSleepTime) {
-        //Disable encoders, so navX can control without influence
-        leftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        rightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        //Sleep because encoders need it after mode change
-        sleep(250);
         if (navx_device.isConnected()) {
             telemetry.addData("NavX is Connected?", "Yes");
             if (navx_device.isMagnetometerCalibrated()) {
@@ -257,9 +254,9 @@ public abstract class EnhancedLinearOpMode extends LinearOpMode {
                     if (altTurn) {
                         powerRatio = -powerRatio;
                     }
-                    if (Math.abs(powerRatio) < MIN_POWER) {
-                        leftMotor.setPower(-MIN_POWER * Math.signum(powerRatio));
-                        rightMotor.setPower(MIN_POWER * Math.signum(powerRatio));
+                    if (Math.abs(powerRatio) < MIN_POWER_TURN) {
+                        leftMotor.setPower(-MIN_POWER_TURN * Math.signum(powerRatio));
+                        rightMotor.setPower(MIN_POWER_TURN * Math.signum(powerRatio));
                     } else {
                         leftMotor.setPower(-powerRatio);
                         rightMotor.setPower(powerRatio);

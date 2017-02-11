@@ -89,8 +89,7 @@ public class FPSTeleOp extends OpMode
         arm = hardwareMap.dcMotor.get("arm");
 
         arm.setDirection(DcMotorSimple.Direction.REVERSE);
-        rightMotor.setDirection(DcMotor.Direction.REVERSE);
-        spin1.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftMotor.setDirection(DcMotor.Direction.REVERSE);
 
         /* eg: Initialize the hardware variables. Note that the strings used here as parameters
          * to 'get' must correspond to the names assigned during the robot configuration
@@ -187,8 +186,8 @@ public class FPSTeleOp extends OpMode
             spin2.setPower(1);
         }
         else {
-            spin1.setPower(0);
-            spin2.setPower(0);
+            spin1.setPower(spin1.getPower() * 0.95);
+            spin2.setPower(spin2.getPower() * 0.95);
         }
 
         if (gamepad1.x) {
