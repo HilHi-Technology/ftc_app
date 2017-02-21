@@ -33,9 +33,9 @@ import java.util.List;
 public abstract class EnhancedLinearOpMode extends LinearOpMode {
 
     public final float MIN_POWER_STRAIGHT = 0.25f;
-    public final float MIN_POWER_TURN = 0.4f;
+    public final float MIN_POWER_TURN = 0.35f;
     public final int STRAIGHT_START_SLOWDOWN = 500;
-    public final float TURN_START_SLOWDOWN = 20f;
+    public final float TURN_START_SLOWDOWN = 60f;
 
     public ElapsedTime runtime = new ElapsedTime();
     public AHRS navx_device;
@@ -122,10 +122,10 @@ public abstract class EnhancedLinearOpMode extends LinearOpMode {
             int avgEncoder = 0;
             double slowdown = 0;
 
-            while (opModeIsActive() && avgEncoder - startPos < ticks) {
-                double percentCompleted = (avgEncoder - startPos - (ticks - STRAIGHT_START_SLOWDOWN)) / STRAIGHT_START_SLOWDOWN;
-                if (percentCompleted >= 0) {
-                    slowdown = percentCompleted * (speed - MIN_POWER_STRAIGHT);
+            while (opModeIsActive() && Math.abs(avgEncoder - startPos) < Math.abs(ticks)) {
+                double percentCompleted = (avgEncoder - startPos - (ticks - (STRAIGHT_START_SLOWDOWN * Math.signum(ticks)))) / STRAIGHT_START_SLOWDOWN;
+                if (Math.abs(avgEncoder - startPos) > Math.abs(ticks) - STRAIGHT_START_SLOWDOWN) {
+                    slowdown = percentCompleted * (Math.abs(speed) - MIN_POWER_STRAIGHT);
                 } else {
                     slowdown = 0;
                 }
@@ -158,51 +158,55 @@ public abstract class EnhancedLinearOpMode extends LinearOpMode {
                 sleep(500);
 
                 float initialYaw = navx_device.getYaw();
-                float totalDistance = initialYaw - initialTarget;
+                float totalDistance = initialYaw - initialTarget; //30
 
-                float altInitialYaw = initialYaw == 0 ? 180 : (180 * Math.signum(initialYaw)) - initialYaw;
-                float altInitialTarget = initialTarget == 0 ? 180 : (180 * Math.signum(initialTarget)) - initialTarget;
-                float altTotalDistance = altInitialYaw - altInitialTarget;
+                /*float altInitialYaw = initialYaw == 0 ? 180 : (180 - Math.abs(initialYaw)) * Math.signum(initialYaw); //-120
+                float altInitialTarget = initialTarget == 0 ? 180 : (180 - Math.abs(initialTarget)) * Math.signum(initialTarget); //-90
+                float altTotalDistance = altInitialYaw - altInitialTarget; //-30
 
                 telemetry.addLine("totalDistance:altTotalDistance " + String.format("%.2f : %.2f",totalDistance, altTotalDistance));
                 telemetry.update();
 
-                boolean altTurn = false;
+                boolean altTurn = false;*/
                 float distanceRemaining = totalDistance;
-                if (Math.abs(totalDistance) > Math.abs(altTotalDistance)) {
+                /*if (Math.abs(totalDistance) > Math.abs(altTotalDistance)) {
                     altTurn = true;
                     totalDistance = altTotalDistance;
                     distanceRemaining = altTotalDistance;
-                }
+                }*/
 
                 float initialSign = Math.signum(distanceRemaining);
-                float altTurnSwitchDirection = 1;
+                //float altTurnSwitchDirection = 1;
                 float slowdown = 0;
+                float percentComplete = 0;
+                float lastYaw = navx_device.getYaw();
+                float currentYaw = lastYaw;
 
-                if (altTurn) {
+                /*if (altTurn) {
                     altTurnSwitchDirection = -1;
-                }
+                }*/
 
                 while (initialSign == Math.signum(distanceRemaining)) {
-                    float percentComplete = 1 - (Math.abs(distanceRemaining) / TURN_START_SLOWDOWN);
+                    percentComplete = 1 - (Math.abs(distanceRemaining) / TURN_START_SLOWDOWN);
                     if (Math.abs(distanceRemaining) < TURN_START_SLOWDOWN) {
                         slowdown = percentComplete * (maxPower - MIN_POWER_TURN);
                     } else {
                         slowdown = 0;
                     }
 
-                    leftMotor.setPower(altTurnSwitchDirection * (-maxPower - slowdown) * Math.signum(distanceRemaining));
-                    rightMotor.setPower(altTurnSwitchDirection * (maxPower - slowdown) * Math.signum(distanceRemaining));
+                    leftMotor.setPower(/*altTurnSwitchDirection * */(-maxPower - slowdown) * Math.signum(distanceRemaining));
+                    rightMotor.setPower(/*altTurnSwitchDirection * */(maxPower - slowdown) * Math.signum(distanceRemaining));
 
-                    telemetry.addLine("distanceRemaining:navx_getyaw:powerRatio " + String.format("%.2f : %.2f",distanceRemaining, navx_device.getYaw(), slowdown));
-                    telemetry.update();
-
-                    if (altTurn) {
+                    /*if (altTurn) {
                         float altCurrentYaw = navx_device.getYaw() == 0 ? 180 : (180 * Math.signum(navx_device.getYaw())) - navx_device.getYaw();
                         distanceRemaining = altCurrentYaw - altInitialTarget;
-                    } else {
-                        distanceRemaining = navx_device.getYaw() - initialTarget;
-                    }
+                    } else {*/
+                        currentYaw = navx_device.getYaw();
+                        distanceRemaining = (currentYaw + (currentYaw - lastYaw)) - initialTarget;
+                        telemetry.addData("delta", currentYaw-lastYaw);
+                        telemetry.update();
+                        lastYaw = currentYaw;
+                    //}
                 }
 
                 leftMotor.setPower(0);
@@ -230,8 +234,6 @@ public abstract class EnhancedLinearOpMode extends LinearOpMode {
         beacons.activate();
 
         sleep(1000);
-
-        VuforiaTrackable image = null;
 
         leftMotor.setPower(firstSpeed);
         rightMotor.setPower(firstSpeed);

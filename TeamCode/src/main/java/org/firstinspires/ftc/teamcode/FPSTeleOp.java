@@ -132,8 +132,9 @@ public class FPSTeleOp extends OpMode
         float forwardStick = -gamepad1.left_stick_y;
         float turnStick = -gamepad1.right_stick_x;
         boolean shootOut = gamepad1.right_bumper;
-        boolean suckIn = gamepad1.left_bumper;
-        float pushOut = gamepad1.left_trigger;
+        float shootOutFast = gamepad1.right_trigger;
+        boolean sweepIn = gamepad1.left_bumper;
+        float sweepOut = gamepad1.left_trigger;
 
 
         telemetry.addData("ForwardStick", forwardStick);
@@ -172,22 +173,32 @@ public class FPSTeleOp extends OpMode
         // leftMotor.setPower(-gamepad1.left_stick_y);
         // rightMotor.setPower(-gamepad1.right_stick_y);
 
-        if (suckIn) {
+        if (sweepIn) {
             sweep.setPower(1);
         }
-        else if (pushOut > 0) {
+        else if (sweepOut > 0) {
             sweep.setPower(-1);
         }
         else {
             sweep.setPower(0);
         }
+
         if (shootOut) {
+            spin1.setPower(0.5);
+            spin2.setPower(0.5);
+        }
+        else {
+            spin1.setPower(spin1.getPower() * 0.98);
+            spin2.setPower(spin2.getPower() * 0.98);
+        }
+
+        if (shootOutFast > 1) {
             spin1.setPower(1);
             spin2.setPower(1);
         }
         else {
-            spin1.setPower(spin1.getPower() * 0.95);
-            spin2.setPower(spin2.getPower() * 0.95);
+            spin1.setPower(spin1.getPower() * 0.98);
+            spin2.setPower(spin2.getPower() * 0.98);
         }
 
         if (gamepad1.x) {

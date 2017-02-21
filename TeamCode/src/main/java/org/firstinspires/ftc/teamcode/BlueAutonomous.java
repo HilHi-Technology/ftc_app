@@ -39,21 +39,14 @@ public class BlueAutonomous extends EnhancedLinearOpMode {
     @Override
     public void startOpMode() {
 
-        navXTurn(45, 0.3f, 1000);
-        navXTurn(90, 0.3f, 1000);
-        navXTurn(0, 0.3f, 1000);
-        navXTurn(-45, 0.3f, 1000);
-        navXTurn(-90, 0.3f, 1000);
-        navXTurn(-180, 0.3f, 1000);
-        navXTurn(180, 0.3f, 1000);
-
-        /*
-        encoderYawStraight(-0.2, -600, 0.01, 1000);
-        navXTurn(35, 0.3f, 1000);
-        encoderYawStraight(-0.3, -4200, 0.01, 1000);
-        navXTurn(3, 0.3f, 1000);
-        vuforiaMove(-0.1, -0.1, -100, 1, 1000);
+        encoderYawStraight(-0.45, -300, 0.01, 1000);
+        navXTurn(38, 0.5f, 1000);
+        encoderYawStraight(-0.45, -2000, 0.01, 1000);
+        navXTurn(5, 0.5f, 1000);
+        vuforiaMove(-0.3, -0.3, -90, 1, 1000);
         beaconPress(2, 2, 5000, 25);
-        */
+        vuforiaMove(-0.3, -0.3, -90, 2, 1000);
+        beaconPress(2, 2, 5000, 25);
+
     }
 }

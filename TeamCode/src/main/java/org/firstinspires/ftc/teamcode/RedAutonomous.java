@@ -30,7 +30,6 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
 TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
 package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
@@ -40,11 +39,13 @@ public class RedAutonomous extends EnhancedLinearOpMode {
     @Override
     public void startOpMode() {
 
-        encoderYawStraight(0.5, 300, 0.01, 1000);
-        navXTurn(-35, 0.6f, 1000);
-        encoderYawStraight(0.5, 2250, 0.01, 1000);
-        navXTurn(-5, 0.6f, 1000);
-        vuforiaMove(0.1, 0.1, 100, 1, 1000);
+        encoderYawStraight(0.45, 300, 0.01, 1000);
+        navXTurn(-38, 0.5f, 1000);
+        encoderYawStraight(0.45, 2000, 0.01, 1000);
+        navXTurn(-5, 0.5f, 1000);
+        vuforiaMove(0.3, 0.3, 95, 1, 1000);
+        beaconPress(2, 2, 5000, -25);
+        vuforiaMove(0.3, 0.3, 90, 2, 1000);
         beaconPress(2, 2, 5000, -25);
 
     }
