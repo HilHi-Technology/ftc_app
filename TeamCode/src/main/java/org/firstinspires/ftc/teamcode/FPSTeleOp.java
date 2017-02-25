@@ -35,6 +35,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -50,7 +51,7 @@ import static java.lang.Math.abs;
  * class is instantiated on the Robot Controller and executed.
  *
  * This particular OpMode just executes a basic Tank Drive Teleop for a PushBot
- * It includes all the skeletal structure that all iterative OpModes contain.
+ * It includes all the skeletal structure that all iterative OpModes    contain.
  *
  * Use Android Studios to Copy this Class, and Paste it into your team's code folder with a new name.
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
@@ -62,14 +63,16 @@ public class FPSTeleOp extends OpMode
     /* Declare OpMode members. */
     private ElapsedTime runtime = new ElapsedTime();
 
-    private DcMotor leftMotor = null;
-    private DcMotor rightMotor = null;
-    private DcMotor sweep = null;
-    private DcMotor spin1 = null;
-    private DcMotor spin2 = null;
-    private DcMotor arm = null;
-
-    private Servo pusher = null;
+    public DcMotor leftMotor = null;
+    public DcMotor rightMotor = null;
+    public DcMotor sweep = null;
+    public DcMotor spin1 = null;
+    public DcMotor spin2 = null;
+    public DcMotor arm = null;
+    public Servo pushLeft = null;
+    public Servo pushRight = null;
+    public Servo liftLock;
+    public ColorSensor colorSensor;
 
     private final float turnMultiplier = 0.5f;
 
@@ -85,11 +88,16 @@ public class FPSTeleOp extends OpMode
         sweep = hardwareMap.dcMotor.get("sweep");
         spin1 = hardwareMap.dcMotor.get("spin1");
         spin2 = hardwareMap.dcMotor.get("spin2");
-        pusher = hardwareMap.servo.get("push");
+        pushLeft = hardwareMap.servo.get("pushLeft");
+        pushRight = hardwareMap.servo.get("pushRight");
         arm = hardwareMap.dcMotor.get("arm");
+        liftLock = hardwareMap.servo.get("lock");
 
         arm.setDirection(DcMotorSimple.Direction.REVERSE);
         leftMotor.setDirection(DcMotor.Direction.REVERSE);
+
+        spin1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        spin2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         /* eg: Initialize the hardware variables. Note that the strings used here as parameters
          * to 'get' must correspond to the names assigned during the robot configuration
@@ -136,6 +144,12 @@ public class FPSTeleOp extends OpMode
         boolean sweepIn = gamepad1.left_bumper;
         float sweepOut = gamepad1.left_trigger;
 
+        float newLeftEncoder = 0;
+        float oldLeftEncoder = 0;
+        float newRightEncoder = 0;
+        float oldRightEncoder = 0;
+        float RPM = 0;
+        float currentPower = 0.5f;
 
         telemetry.addData("ForwardStick", forwardStick);
         telemetry.addData("TurnStick", turnStick);
@@ -174,49 +188,137 @@ public class FPSTeleOp extends OpMode
         // rightMotor.setPower(-gamepad1.right_stick_y);
 
         if (sweepIn) {
+            telemetry.addData("SweepIn", sweepIn);
+            telemetry.update();
             sweep.setPower(1);
-        }
-        else if (sweepOut > 0) {
+        } else if (sweepOut > 0) {
             sweep.setPower(-1);
-        }
-        else {
+        } else {
             sweep.setPower(0);
         }
 
         if (shootOut) {
-            spin1.setPower(0.5);
-            spin2.setPower(0.5);
-        }
-        else {
-            spin1.setPower(spin1.getPower() * 0.98);
-            spin2.setPower(spin2.getPower() * 0.98);
+            //spin1.setPower(0.65);
+            //spin2.setPower(0.65);
+            telemetry.addData("Shootout", shootOut);
+            telemetry.update();
+            spin1.setPower(currentPower);
+            spin2.setPower(currentPower);
+
+            runtime.reset();
+            while (runtime.seconds() < 1) {
+            }
+
+            while (RPM < 650) {
+                newLeftEncoder = spin1.getCurrentPosition();
+                newRightEncoder = spin2.getCurrentPosition();
+
+                spin1.setPower(currentPower);
+                spin2.setPower(currentPower);
+
+                runtime.reset();
+                while (runtime.seconds() < 0.1) {
+                }
+
+                currentPower += 0.015f;
+                RPM = (((newLeftEncoder - oldLeftEncoder) + (newRightEncoder - oldRightEncoder)) / 2) / (int)runtime.seconds();
+
+                oldLeftEncoder = newLeftEncoder;
+                oldRightEncoder = newRightEncoder;
+            }
+
+            telemetry.addData("Sweeping", sweep);
+            telemetry.update();
+
+            sweep.setPower(1);
+
+            runtime.reset();
+            while (runtime.seconds() < 5) {
+            }
+
+            sweep.setPower(0);
+            spin1.setPower(0);
+            spin2.setPower(0);
+
+        } else {
+            //spin1.setPower(spin1.getPower() * 0.98);
+            //spin2.setPower(spin2.getPower() * 0.98);
         }
 
         if (shootOutFast > 0) {
-            spin1.setPower(1);
-            spin2.setPower(1);
-        }
-        else {
-            spin1.setPower(spin1.getPower() * 0.98);
-            spin2.setPower(spin2.getPower() * 0.98);
+            //spin1.setPower(0.9);
+            //spin2.setPower(0.9);
+            telemetry.addData("Shootout", shootOut);
+            telemetry.update();
+            spin1.setPower(0.5);
+            spin2.setPower(0.5);
+
+            runtime.reset();
+            while (runtime.seconds() < 1) {
+            }
+
+
+            while (RPM < 900) {
+                runtime.reset();
+
+                spin1.setPower(currentPower);
+                spin2.setPower(currentPower);
+
+                runtime.reset();
+                while (runtime.seconds() < 0.1) {
+                }
+
+                currentPower = currentPower + 0.015f;
+                RPM = (((newLeftEncoder - oldLeftEncoder) - (newRightEncoder - oldRightEncoder)) / 2) / (int)runtime.seconds();
+            }
+
+            sweep.setPower(1);
+
+            runtime.reset();
+            while (runtime.seconds() < 5) {
+            }
+
+            sweep.setPower(0);
+            spin1.setPower(0);
+            spin2.setPower(0);
+
+
+        } else {
+            //spin1.setPower(spin1.getPower() * 0.98);
+            //spin2.setPower(spin2.getPower() * 0.98);
+
+>>>>>>> 90bd85c98427bc302ff570856b98402a87b17538
         }
 
         if (gamepad1.x) {
-            pusher.setPosition(0);
+            pushLeft.setPosition(0);
         } else if (gamepad1.b) {
-            pusher.setPosition(1);
+            pushLeft.setPosition(1);
         } else {
-            pusher.setPosition(0.5);
+            pushLeft.setPosition(0.5);
+        }
+
+        if (gamepad1.dpad_left) {
+            pushRight.setPosition(0);
+        } else if (gamepad1.dpad_right) {
+            pushRight.setPosition(1);
+        } else {
+            pushRight.setPosition(0.5);
         }
 
         if (gamepad1.y) {
             arm.setPower(1);
-        }
-        else if (gamepad1.a) {
+        } else if (gamepad1.a) {
             arm.setPower(-1);
-        }
-        else {
+        } else {
             arm.setPower(0);
         }
+
+        if (gamepad1.dpad_up) {
+            liftLock.setPosition(0);
+        } else {
+            liftLock.setPosition(1);
+        }
+
     }
 }
