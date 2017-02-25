@@ -192,7 +192,7 @@ public class FPSTeleOp extends OpMode
             spin2.setPower(spin2.getPower() * 0.98);
         }
 
-        if (shootOutFast > 1) {
+        if (shootOutFast > 0) {
             spin1.setPower(1);
             spin2.setPower(1);
         }
