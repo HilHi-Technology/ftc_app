@@ -42,8 +42,14 @@ public abstract class EnhancedLinearOpMode extends LinearOpMode {
 
     public DcMotor leftMotor = null;
     public DcMotor rightMotor = null;
-    public Servo pusher = null;
+    public DcMotor sweep = null;
+    public DcMotor spin1 = null;
+    public DcMotor spin2 = null;
+    public DcMotor arm = null;
+    public Servo pushLeft = null;
+    public Servo pushRight = null;
     public ColorSensor colorSensor;
+    public Servo liftLock;
 
     public VuforiaLocalizer vuforia;
 
@@ -55,9 +61,15 @@ public abstract class EnhancedLinearOpMode extends LinearOpMode {
 
         leftMotor = hardwareMap.dcMotor.get("lm");
         rightMotor = hardwareMap.dcMotor.get("rm");
+        sweep = hardwareMap.dcMotor.get("sweep");
+        spin1 = hardwareMap.dcMotor.get("spin1");
+        spin2 = hardwareMap.dcMotor.get("spin2");
+        pushLeft = hardwareMap.servo.get("pushLeft");
+        pushRight = hardwareMap.servo.get("pushRight");
+        arm = hardwareMap.dcMotor.get("arm");
+        liftLock = hardwareMap.servo.get("lock");
 
-        pusher = hardwareMap.servo.get("push");
-        pusher.setPosition(0.5);
+        pushLeft.setPosition(0.5);
 
         leftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
@@ -99,20 +111,17 @@ public abstract class EnhancedLinearOpMode extends LinearOpMode {
                 navx_device.zeroYaw();
             }
         }
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
         startOpMode();
     }
 
     public abstract void startOpMode();
 
-    public void encoderYawStraight(double speed, double ticks, double adjustRate, double sleepTime) {
+    public void encoderYawStraight(float speed, float ticks, float adjustRate, float sleepTime) {
         if (opModeIsActive()) {
 
             float startYaw = navx_device.getYaw();
             if (speed > 0.8) {
-                speed = 0.8;
+                speed = 0.8f;
             }
             int startPos = (leftMotor.getCurrentPosition() + rightMotor.getCurrentPosition()) / 2;
 
@@ -120,10 +129,10 @@ public abstract class EnhancedLinearOpMode extends LinearOpMode {
             leftMotor.setPower(speed);
 
             int avgEncoder = 0;
-            double slowdown = 0;
+            float slowdown = 0;
 
             while (opModeIsActive() && Math.abs(avgEncoder - startPos) < Math.abs(ticks)) {
-                double percentCompleted = (avgEncoder - startPos - (ticks - (STRAIGHT_START_SLOWDOWN * Math.signum(ticks)))) / STRAIGHT_START_SLOWDOWN;
+                float percentCompleted = (avgEncoder - startPos - (ticks - (STRAIGHT_START_SLOWDOWN * Math.signum(ticks)))) / STRAIGHT_START_SLOWDOWN;
                 if (Math.abs(avgEncoder - startPos) > Math.abs(ticks) - STRAIGHT_START_SLOWDOWN) {
                     slowdown = percentCompleted * (Math.abs(speed) - MIN_POWER_STRAIGHT);
                 } else {
@@ -148,7 +157,7 @@ public abstract class EnhancedLinearOpMode extends LinearOpMode {
         }
     }
 
-    public void navXTurn(float initialTarget, float maxPower, double turnSleepTime) {
+    public void navXTurn(float initialTarget, float maxPower, float turnSleepTime) {
         if (navx_device.isConnected()) {
             telemetry.addData("NavX is Connected?", "Yes");
             if (navx_device.isMagnetometerCalibrated()) {
@@ -224,7 +233,7 @@ public abstract class EnhancedLinearOpMode extends LinearOpMode {
         sleep((int) turnSleepTime);
     }
 
-    public void vuforiaMove(double firstSpeed, double secondSpeed, float position, int imageNumber, int wait) {
+    public void vuforiaMove(float firstSpeed, float secondSpeed, float position, int imageNumber, int wait) {
         VuforiaTrackables beacons = vuforia.loadTrackablesFromAsset("FTC_2016-17");
         beacons.get(0).setName("Wheels");
         beacons.get(1).setName("Tools");
@@ -275,23 +284,73 @@ public abstract class EnhancedLinearOpMode extends LinearOpMode {
         sleep(wait);
     }
 
-    public void beaconPress(int redCheck, int blueCheck, int pressAmount, int distanceRedBlue) {
-        pusher.setPosition(0);
+    public void beaconPressLeft(int redCheck, int blueCheck, int pressAmount, int distanceRedBlue) {
+        pushLeft.setPosition(0);
         while (colorSensor.red() < redCheck && colorSensor.blue() < blueCheck) {
             telemetry.addData("Red", colorSensor.red());
             telemetry.addData("Blue", colorSensor.blue());
             telemetry.update();
         }
-        pusher.setPosition(0.5);
+        pushLeft.setPosition(0.5);
         if (colorSensor.red() >= redCheck) {
-            pusher.setPosition(0);
+            pushLeft.setPosition(0);
             sleep(pressAmount);
         } else if (colorSensor.blue() >= blueCheck) {
-            vuforiaMove(0.1, 0.1, distanceRedBlue, 1, 1000);
-            pusher.setPosition(0);
+            vuforiaMove(0.1f, 0.1f, distanceRedBlue, 1, 1000);
+            pushLeft.setPosition(0);
             sleep(pressAmount);
         }
-        pusher.setPosition(0.5);
+        pushLeft.setPosition(0.5);
     }
 
+    public void beaconPressRight(int redCheck, int blueCheck, int pressAmount, int distanceRedBlue) {
+        pushRight.setPosition(0);
+        while (colorSensor.red() < redCheck && colorSensor.blue() < blueCheck) {
+            telemetry.addData("Red", colorSensor.red());
+            telemetry.addData("Blue", colorSensor.blue());
+            telemetry.update();
+        }
+        pushRight.setPosition(0.5);
+        if (colorSensor.red() >= redCheck) {
+            pushRight.setPosition(0);
+            sleep(pressAmount);
+        } else if (colorSensor.blue() >= blueCheck) {
+            vuforiaMove(0.1f, 0.1f, distanceRedBlue, 1, 1000);
+            pushRight.setPosition(0);
+            sleep(pressAmount);
+        }
+        pushRight.setPosition(0.5);
+    }
+
+    public void ballShootAuto(int spinUp, float constantIncrease, int targetRPM) {
+        int newEncoder = 0;
+        int oldEncoder = 0;
+        float currentPower = 0;
+        int RPM = 0;
+
+        spin2.setPower(0.5);
+        spin1.setPower(0.5);
+        sleep(spinUp);
+
+        while (RPM < targetRPM) {
+            runtime.reset();
+            spin1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            spin2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+            spin2.setPower(currentPower);
+            spin1.setPower(currentPower);
+
+            sleep(100);
+
+            currentPower = currentPower + constantIncrease;
+            RPM = ((newEncoder - oldEncoder) / 2) / (int)runtime.seconds();
+        }
+
+        sweep.setPower(1);
+        sleep(5000);
+        sweep.setPower(0);
+        spin2.setPower(0);
+        spin1.setPower(0);
+
+    }
 }
