@@ -39,16 +39,18 @@ public class RedAutonomous extends EnhancedLinearOpMode {
     @Override
     public void startOpMode() {
 
-        encoderYawStraight(-0.45f, -300, 0.01f, 1000);
-        navXTurn(10, 0.5f, 1000);
+        encoderYawStraight(-0.45f, -100, 0.01f, 500);
+        navXTurn(5, 0.6f, 500);
         ballShootAuto(1000, 0.015f, 900);
-        navXTurn(-38, 0.5f, 1000);
-        encoderYawStraight(-0.45f, -2000, 0.01f, 1000);
-        navXTurn(-5, 0.5f, 1000);
-        vuforiaMove(-0.3f, -0.3f, 95, 1, 1000);
-        beaconPressRight(2, 2, 5000, -25);
-        vuforiaMove(-0.3f, -0.3f, 90, 2, 1000);
-        beaconPressRight(2, 2, 5000, -25);
+        navXTurn(-38, 0.6f, 500);
+        encoderYawStraight(-0.45f, -2300, 0.01f, 500);
+        navXTurn(0, 0.6f, 500);
+        vuforiaMove(0.3f, 0.3f, 95, 1, 1000);
+        encoderYawStraight(0.45f, 1500, 0.01f, 500);
+        beaconPressRight(2, 2, 5000, 95);
+        vuforiaMove(-0.3f, -0.3f, 95, 2, 500);
+        encoderYawStraight(0.45f, 1500, 0.01f, 500);
+        beaconPressRight(2, 2, 5000, 95);
 
     }
 }

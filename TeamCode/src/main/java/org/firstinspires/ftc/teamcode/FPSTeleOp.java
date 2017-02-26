@@ -131,6 +131,10 @@ public class FPSTeleOp extends OpMode
     @Override
     public void start() {
         runtime.reset();
+
+        spin1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        spin2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
     }
 
     /*
@@ -216,46 +220,6 @@ public class FPSTeleOp extends OpMode
             spin2.setPower(spin2.getPower() * 0.98);
         }
 
-        if (shootOutFast > 0) {
-            spin1.setPower(currentPower);
-            spin2.setPower(currentPower);
-            /*spin1.setPower(0.9);
-            spin2.setPower(0.9);*/
-            /* telemetry.addData("Shootout", shootOut);
-            telemetry.update();
-            spin1.setPower(0.5);
-            spin2.setPower(0.5);
-
-            runtime.reset();
-            while (runtime.seconds() < 1) {
-            }
-
-            while (RPM < 900) {
-                spin1.setPower(currentPower);
-                spin2.setPower(currentPower);
-
-                runtime.reset();
-                while (runtime.seconds() < 0.1) {
-                }
-                currentPower += 0.015f;
-                RPM = (((newLeftEncoder - oldLeftEncoder) + (newRightEncoder - oldRightEncoder)) / 2) / (int)runtime.seconds();
-            }
-
-            sweep.setPower(1);
-
-            runtime.reset();
-            while (runtime.seconds() < 5) {
-            }
-
-            sweep.setPower(0);
-            spin1.setPower(0);
-            spin2.setPower(0);
-            */
-        } else {
-            spin1.setPower(spin1.getPower() * 0.98);
-            spin2.setPower(spin2.getPower() * 0.98);
-        }
-
         if (gamepad1.x) {
             pushLeft.setPosition(0);
         } else if (gamepad1.b) {
@@ -282,6 +246,8 @@ public class FPSTeleOp extends OpMode
 
         if (gamepad1.dpad_up) {
             liftLock.setPosition(0);
+        } else {
+            liftLock.setPosition(1);
         }
 
     }
