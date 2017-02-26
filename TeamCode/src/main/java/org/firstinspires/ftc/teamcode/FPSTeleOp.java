@@ -257,7 +257,6 @@ public class FPSTeleOp extends OpMode
             while (runtime.seconds() < 1) {
             }
 
-
             while (RPM < 900) {
                 runtime.reset();
 
@@ -286,8 +285,6 @@ public class FPSTeleOp extends OpMode
         } else {
             //spin1.setPower(spin1.getPower() * 0.98);
             //spin2.setPower(spin2.getPower() * 0.98);
-
->>>>>>> 90bd85c98427bc302ff570856b98402a87b17538
         }
 
         if (gamepad1.x) {

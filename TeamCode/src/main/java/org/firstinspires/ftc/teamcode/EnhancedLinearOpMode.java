@@ -70,6 +70,8 @@ public abstract class EnhancedLinearOpMode extends LinearOpMode {
         liftLock = hardwareMap.servo.get("lock");
 
         pushLeft.setPosition(0.5);
+        pushRight.setPosition(0.5);
+        liftLock.setPosition(0);
 
         leftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
@@ -323,19 +325,22 @@ public abstract class EnhancedLinearOpMode extends LinearOpMode {
     }
 
     public void ballShootAuto(int spinUp, float constantIncrease, int targetRPM) {
-        int newEncoder = 0;
-        int oldEncoder = 0;
-        float currentPower = 0;
-        int RPM = 0;
+        float newLeftEncoder = 0;
+        float oldLeftEncoder = 0;
+        float newRightEncoder = 0;
+        float oldRightEncoder = 0;
+        float RPM = 0;
+        float currentPower = 0.5f;
 
         spin2.setPower(0.5);
         spin1.setPower(0.5);
         sleep(spinUp);
 
         while (RPM < targetRPM) {
+            newLeftEncoder = spin1.getCurrentPosition();
+            newRightEncoder = spin2.getCurrentPosition();
+
             runtime.reset();
-            spin1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            spin2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
             spin2.setPower(currentPower);
             spin1.setPower(currentPower);
@@ -343,11 +348,19 @@ public abstract class EnhancedLinearOpMode extends LinearOpMode {
             sleep(100);
 
             currentPower = currentPower + constantIncrease;
-            RPM = ((newEncoder - oldEncoder) / 2) / (int)runtime.seconds();
+            RPM = (((newLeftEncoder - oldLeftEncoder) + (newRightEncoder - oldRightEncoder)) / 2) / (int)runtime.seconds();
+
+            oldLeftEncoder = newLeftEncoder;
+            oldRightEncoder = newRightEncoder;
         }
 
         sweep.setPower(1);
-        sleep(5000);
+        sleep(3000);
+        while(spin1.getPower() > 1) {
+            sweep.setPower(sweep.getPower() * 0.98);
+            spin1.setPower(spin1.getPower() * 0.98);
+            spin2.setPower(spin2.getPower() * 0.98);
+        }
         sweep.setPower(0);
         spin2.setPower(0);
         spin1.setPower(0);
