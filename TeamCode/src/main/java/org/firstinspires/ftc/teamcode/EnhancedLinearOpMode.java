@@ -221,11 +221,13 @@ public abstract class EnhancedLinearOpMode extends LinearOpMode {
                     }
 
                     leftMotor.setPower(/*altTurnSwitchDirection * */(-maxPower - slowdown) * Math.signum(distanceRemaining));
-                    rightMotor.setPower(/*altTurnSwitchDirec /*if (altTurn) {tion * */(maxPower - slowdown) * Math.signum(distanceRemaining));
+                    rightMotor.setPower(/*altTurnSwitchDirection * */(maxPower - slowdown) * Math.signum(distanceRemaining));
 
+                    /*if (altTurn) {
                     float altCurrentYaw = navx_device.getYaw() == 0 ? 180 : (180 * Math.signum(navx_device.getYaw())) - navx_device.getYaw();
-                        distanceRemaining = altCurrentYaw - altInitialTarget;
-                    } else {
+                    distanceRemaining = altCurrentYaw - altInitialTarget;
+                } else { */
+
                         currentYaw = navx_device.getYaw();
                         distanceRemaining = (currentYaw + (currentYaw - lastYaw)) - initialTarget;
                         telemetry.addData("delta", currentYaw-lastYaw);
