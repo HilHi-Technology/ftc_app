@@ -212,7 +212,7 @@ public abstract class EnhancedLinearOpMode extends LinearOpMode {
                     altTurnSwitchDirection = -1;
                 }*/
 
-                while (initialSign == Math.signum(distanceRemaining)) {
+                while (opModeIsActive() && initialSign == Math.signum(distanceRemaining)) {
                     percentComplete = 1 - (Math.abs(distanceRemaining) / TURN_START_SLOWDOWN);
                     if (Math.abs(distanceRemaining) < TURN_START_SLOWDOWN) {
                         slowdown = percentComplete * (maxPower - MIN_POWER_TURN);
@@ -387,7 +387,7 @@ public abstract class EnhancedLinearOpMode extends LinearOpMode {
 
         sweep.setPower(1);
         sleep(3000);
-        while(spin1.getPower() > 1) {
+        while(opModeIsActive() && spin1.getPower() > 1) {
             sweep.setPower(sweep.getPower() * 0.98);
             spin1.setPower(spin1.getPower() * 0.98);
             spin2.setPower(spin2.getPower() * 0.98);

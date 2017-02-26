@@ -60,6 +60,7 @@ import static java.lang.Math.abs;
 @TeleOp(name="FPSTeleOp", group="Iterative Opmode")  // @Thingy?(...) is the other common choice
 public class FPSTeleOp extends OpMode
 {
+    private static final float FLYWHEEL_IDLE_SPEED = 600;
     /* Declare OpMode members. */
     private ElapsedTime runtime = new ElapsedTime();
 
@@ -74,7 +75,11 @@ public class FPSTeleOp extends OpMode
     public Servo liftLock;
     public ColorSensor colorSensor;
 
+    private float currentPower = 0.5f;
+    private double spinupStartSecs = -1;
+
     private final float turnMultiplier = 0.5f;
+
 
     /*
      * Code to run ONCE when the driver hits INIT
@@ -148,8 +153,6 @@ public class FPSTeleOp extends OpMode
         float oldLeftEncoder = 0;
         float newRightEncoder = 0;
         float oldRightEncoder = 0;
-        float RPM = 0;
-        float currentPower = 0.5f;
 
         telemetry.addData("ForwardStick", forwardStick);
         telemetry.addData("TurnStick", turnStick);
@@ -198,57 +201,27 @@ public class FPSTeleOp extends OpMode
         }
 
         if (shootOut) {
-            //spin1.setPower(0.65);
-            //spin2.setPower(0.65);
-            telemetry.addData("Shootout", shootOut);
-            telemetry.update();
             spin1.setPower(currentPower);
             spin2.setPower(currentPower);
 
-            runtime.reset();
-            while (runtime.seconds() < 1) {
+            double RPM = (((newLeftEncoder - oldLeftEncoder) + (newRightEncoder - oldRightEncoder)) / 2) / (runtime.seconds() / 60);
+            if (RPM > FLYWHEEL_IDLE_SPEED) {
+                currentPower -= 0.02;
+            } else {
+                currentPower += 0.02;
             }
-
-            while (RPM < 650) {
-                newLeftEncoder = spin1.getCurrentPosition();
-                newRightEncoder = spin2.getCurrentPosition();
-
-                spin1.setPower(currentPower);
-                spin2.setPower(currentPower);
-
-                runtime.reset();
-                while (runtime.seconds() < 0.1) {
-                }
-
-                currentPower += 0.015f;
-                RPM = (((newLeftEncoder - oldLeftEncoder) + (newRightEncoder - oldRightEncoder)) / 2) / (int)runtime.seconds();
-
-                oldLeftEncoder = newLeftEncoder;
-                oldRightEncoder = newRightEncoder;
-            }
-
-            telemetry.addData("Sweeping", sweep);
-            telemetry.update();
-
-            sweep.setPower(1);
-
-            runtime.reset();
-            while (runtime.seconds() < 5) {
-            }
-
-            sweep.setPower(0);
-            spin1.setPower(0);
-            spin2.setPower(0);
-
         } else {
-            //spin1.setPower(spin1.getPower() * 0.98);
-            //spin2.setPower(spin2.getPower() * 0.98);
+            currentPower = 0.5f;
+            spin1.setPower(spin1.getPower() * 0.98);
+            spin2.setPower(spin2.getPower() * 0.98);
         }
 
         if (shootOutFast > 0) {
-            //spin1.setPower(0.9);
-            //spin2.setPower(0.9);
-            telemetry.addData("Shootout", shootOut);
+            spin1.setPower(currentPower);
+            spin2.setPower(currentPower);
+            /*spin1.setPower(0.9);
+            spin2.setPower(0.9);*/
+            /* telemetry.addData("Shootout", shootOut);
             telemetry.update();
             spin1.setPower(0.5);
             spin2.setPower(0.5);
@@ -258,16 +231,14 @@ public class FPSTeleOp extends OpMode
             }
 
             while (RPM < 900) {
-                runtime.reset();
-
                 spin1.setPower(currentPower);
                 spin2.setPower(currentPower);
 
                 runtime.reset();
                 while (runtime.seconds() < 0.1) {
                 }
-                currentPower = currentPower + 0.015f;
-                RPM = (((newLeftEncoder - oldLeftEncoder) - (newRightEncoder - oldRightEncoder)) / 2) / (int)runtime.seconds();
+                currentPower += 0.015f;
+                RPM = (((newLeftEncoder - oldLeftEncoder) + (newRightEncoder - oldRightEncoder)) / 2) / (int)runtime.seconds();
             }
 
             sweep.setPower(1);
@@ -279,11 +250,10 @@ public class FPSTeleOp extends OpMode
             sweep.setPower(0);
             spin1.setPower(0);
             spin2.setPower(0);
-
-
+            */
         } else {
-            //spin1.setPower(spin1.getPower() * 0.98);
-            //spin2.setPower(spin2.getPower() * 0.98);
+            spin1.setPower(spin1.getPower() * 0.98);
+            spin2.setPower(spin2.getPower() * 0.98);
         }
 
         if (gamepad1.x) {
@@ -312,8 +282,6 @@ public class FPSTeleOp extends OpMode
 
         if (gamepad1.dpad_up) {
             liftLock.setPosition(0);
-        } else {
-            liftLock.setPosition(1);
         }
 
     }
