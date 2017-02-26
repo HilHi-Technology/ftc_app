@@ -267,7 +267,6 @@ public class FPSTeleOp extends OpMode
                 runtime.reset();
                 while (runtime.seconds() < 0.1) {
                 }
-
                 currentPower = currentPower + 0.015f;
                 RPM = (((newLeftEncoder - oldLeftEncoder) - (newRightEncoder - oldRightEncoder)) / 2) / (int)runtime.seconds();
             }

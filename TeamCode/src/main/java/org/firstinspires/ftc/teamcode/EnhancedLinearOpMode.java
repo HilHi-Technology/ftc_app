@@ -116,6 +116,13 @@ public abstract class EnhancedLinearOpMode extends LinearOpMode {
 
     public abstract void startOpMode();
 
+    /*
+    This algorithm controls the trajectory of the robot by checking the yaw from the navx and doing a
+    proportional correction to the motor power in order to return the robot to a straight line when it deviates.
+    The further, the robot is from that line, the larger the power correction.
+    Min and Max motor speeds are enforced for optimal efficiency.
+     */
+
     public void encoderYawStraight(float speed, float ticks, float adjustRate, float sleepTime) {
         if (opModeIsActive()) {
 
@@ -156,6 +163,14 @@ public abstract class EnhancedLinearOpMode extends LinearOpMode {
             sleep((int) sleepTime);
         }
     }
+
+    /*
+    The NavX sensor module that contains a gyroscope, compass, and accelerometer is used in this
+    algorithm to accurately turn relative to a set zero yaw at the beginning of both autonomous programs.
+    Careful calculation is performed to find the amount to turn using a comparison algorithm taking turn
+    direction into account with signum. Turning power is calculated proportionally using a Min and Max
+    power for efficiency and tuning the power between those bounds based on remaining turn amount.
+    */
 
     public void navXTurn(float initialTarget, float maxPower, float turnSleepTime) {
         if (navx_device.isConnected()) {
@@ -204,12 +219,11 @@ public abstract class EnhancedLinearOpMode extends LinearOpMode {
                     }
 
                     leftMotor.setPower(/*altTurnSwitchDirection * */(-maxPower - slowdown) * Math.signum(distanceRemaining));
-                    rightMotor.setPower(/*altTurnSwitchDirection * */(maxPower - slowdown) * Math.signum(distanceRemaining));
+                    rightMotor.setPower(/*altTurnSwitchDirec /*if (altTurn) {tion * */(maxPower - slowdown) * Math.signum(distanceRemaining));
 
-                    /*if (altTurn) {
-                        float altCurrentYaw = navx_device.getYaw() == 0 ? 180 : (180 * Math.signum(navx_device.getYaw())) - navx_device.getYaw();
+                    float altCurrentYaw = navx_device.getYaw() == 0 ? 180 : (180 * Math.signum(navx_device.getYaw())) - navx_device.getYaw();
                         distanceRemaining = altCurrentYaw - altInitialTarget;
-                    } else {*/
+                    } else {
                         currentYaw = navx_device.getYaw();
                         distanceRemaining = (currentYaw + (currentYaw - lastYaw)) - initialTarget;
                         telemetry.addData("delta", currentYaw-lastYaw);
@@ -232,6 +246,13 @@ public abstract class EnhancedLinearOpMode extends LinearOpMode {
         }
         sleep((int) turnSleepTime);
     }
+
+    /*
+    The final algorithm we use is vuforiaMove. The name is less
+    self-descriptive than the other functions but vuforiaMove drives straight
+    until the phone’s camera detects the image beneath the beacon.
+    The detection algorithm used is based off of Vuforia code.
+     */
 
     public void vuforiaMove(float firstSpeed, float secondSpeed, float position, int imageNumber, int wait) {
         VuforiaTrackables beacons = vuforia.loadTrackablesFromAsset("FTC_2016-17");
@@ -272,7 +293,7 @@ public abstract class EnhancedLinearOpMode extends LinearOpMode {
         if (secondSpeed < 0) {
             reverseDirection = -1;
         }
-        while (reverseDirection * ((VuforiaTrackableDefaultListener) beacons.get(foundImages.get(imageNumber - 1)).getListener()).getPose().getTranslation().get(1) > reverseDirection * position) {
+        while (opModeIsActive() && reverseDirection * ((VuforiaTrackableDefaultListener) beacons.get(foundImages.get(imageNumber - 1)).getListener()).getPose().getTranslation().get(1) > reverseDirection * position) {
             leftMotor.setPower(secondSpeed);
             rightMotor.setPower(secondSpeed);
         }
@@ -286,7 +307,7 @@ public abstract class EnhancedLinearOpMode extends LinearOpMode {
 
     public void beaconPressLeft(int redCheck, int blueCheck, int pressAmount, int distanceRedBlue) {
         pushLeft.setPosition(0);
-        while (colorSensor.red() < redCheck && colorSensor.blue() < blueCheck) {
+        while (opModeIsActive() && colorSensor.red() < redCheck && colorSensor.blue() < blueCheck) {
             telemetry.addData("Red", colorSensor.red());
             telemetry.addData("Blue", colorSensor.blue());
             telemetry.update();
@@ -305,7 +326,7 @@ public abstract class EnhancedLinearOpMode extends LinearOpMode {
 
     public void beaconPressRight(int redCheck, int blueCheck, int pressAmount, int distanceRedBlue) {
         pushRight.setPosition(0);
-        while (colorSensor.red() < redCheck && colorSensor.blue() < blueCheck) {
+        while (opModeIsActive() && colorSensor.red() < redCheck && colorSensor.blue() < blueCheck) {
             telemetry.addData("Red", colorSensor.red());
             telemetry.addData("Blue", colorSensor.blue());
             telemetry.update();
@@ -322,6 +343,14 @@ public abstract class EnhancedLinearOpMode extends LinearOpMode {
         pushRight.setPosition(0.5);
     }
 
+    /*
+    The ballShootAuto algorithm is our latest addition, it was added to provide control
+    to the problem of inconsistent ball shoots that we made based on power alone.
+    This algorithm spins up the flywheels at a slightly low best guess power, then
+    tunes the power based on computed RPM compared to our target ball throwing RPM.
+    This ensures that balls are thrown at the target RPM regardless of battery charge.
+    */
+
     public void ballShootAuto(int spinUp, float constantIncrease, int targetRPM) {
         int newEncoder = 0;
         int oldEncoder = 0;
@@ -332,7 +361,7 @@ public abstract class EnhancedLinearOpMode extends LinearOpMode {
         spin1.setPower(0.5);
         sleep(spinUp);
 
-        while (RPM < targetRPM) {
+        while (opModeIsActive() && RPM < targetRPM) {
             runtime.reset();
             spin1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             spin2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -353,4 +382,5 @@ public abstract class EnhancedLinearOpMode extends LinearOpMode {
         spin1.setPower(0);
 
     }
+
 }
