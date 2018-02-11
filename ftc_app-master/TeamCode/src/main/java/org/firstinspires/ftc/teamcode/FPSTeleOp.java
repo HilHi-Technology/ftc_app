@@ -32,16 +32,11 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
-
-import static java.lang.Math.abs;
 
 /**
  * This file contains an example of an iterative (Non-Linear) "OpMode".
@@ -57,112 +52,59 @@ import static java.lang.Math.abs;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@TeleOp(name="FPSTeleOp", group="Iterative Opmode")  // @Thingy?(...) is the other common choice
+@TeleOp(name="FPSTeleOp", group="Iterative Opmode")
 public class FPSTeleOp extends OpMode
 {
-    private static final float FLYWHEEL_IDLE_SPEED = 600;
     /* Declare OpMode members. */
     private ElapsedTime runtime = new ElapsedTime();
 
     public DcMotor leftMotor = null;
     public DcMotor rightMotor = null;
-/*
-    public DcMotor sweep = null;
-    public DcMotor spin1 = null;
-    public DcMotor spin2 = null;
-    public DcMotor arm = null;
-    public Servo pushLeft = null;
-    public Servo pushRight = null;
-    public Servo liftLock;
-    public ColorSensor colorSensor;
-*/
-
-    private float currentPower = 0.5f;
-//    private double spinupStartSecs = -1;
-
+    public DcMotor armMotor = null;
+    public Servo leftGrab = null;
+    public Servo rightGrab = null;
+    public Servo golf = null;
     private final float turnMultiplier = 0.5f;
+    boolean toggleGrab = false;
+    boolean doToggleGrab = true;
+    boolean toggleGolf = false;
+    boolean doToggleGolf = true;
 
-
-    /*
-     * Code to run ONCE when the driver hits INIT
-     */
+    /* Code to run ONCE when the driver hits INIT */
     @Override
     public void init() {
         telemetry.addData("Status", "Initialized");
 
         leftMotor = hardwareMap.dcMotor.get("lm");
         rightMotor = hardwareMap.dcMotor.get("rm");
-/*
-        sweep = hardwareMap.dcMotor.get("sweep");
-        spin1 = hardwareMap.dcMotor.get("spin1");
-        spin2 = hardwareMap.dcMotor.get("spin2");
-        pushLeft = hardwareMap.servo.get("pushLeft");
-        pushRight = hardwareMap.servo.get("pushRight");
-        arm = hardwareMap.dcMotor.get("arm");
-        liftLock = hardwareMap.servo.get("lock");
-*/
+        armMotor = hardwareMap.dcMotor.get("arm");
+        leftGrab = hardwareMap.servo.get("lg");
+        rightGrab = hardwareMap.servo.get("rg");
+        golf = hardwareMap.servo.get("golf");
 
-//        arm.setDirection(DcMotorSimple.Direction.REVERSE);
         leftMotor.setDirection(DcMotor.Direction.REVERSE);
-
-//        spin1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-//        spin2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        /* eg: Initialize the hardware variables. Note that the strings used here as parameters
-         * to 'get' must correspond to the names assigned during the robot configuration
-         * step (using the FTC Robot Controller app on the phone).
-         */
-        // leftMotor  = hardwareMap.dcMotor.get("left motor");
-        // rightMotor = hardwareMap.dcMotor.get("right motor");
-
-        // eg: Set the drive motor directions:
-        // Reverse the motor that runs backwards when connected directly to the battery
-        // leftMotor.setDirection(DcMotor.Direction.FORWARD); // Set to REVERSE if using AndyMark motors
-        //  rightMotor.setDirection(DcMotor.Direction.REVERSE);// Set to FORWARD if using AndyMark motors
-        // telemetry.addData("Status", "Initialized");
+        leftGrab.setDirection(Servo.Direction.REVERSE);
     }
 
-    /*
-     * Code to run REPEATEDLY after the driver hits INIT, but before they hit PLAY
-     */
+    /* Code to run REPEATEDLY after the driver hits INIT, but before they hit PLAY */
     @Override
-    public void init_loop() {
-    }
+    public void init_loop() {}
 
-    /*
-     * Code to run ONCE when the driver hits PLAY
-     */
+    /* Code to run ONCE when the driver hits PLAY */
     @Override
     public void start() {
         runtime.reset();
-
-//        spin1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-//        spin2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
     }
 
-    /*
-     * Code to run REPEATEDLY after the driver hits PLAY but before they hit STOP
-     */
+    /* Code to run REPEATEDLY after the driver hits PLAY but before they hit STOP */
     @Override
     public void loop() {
         //Change status to running for debug
         telemetry.addData("Status", "Running: " + runtime.toString());
 
         //Get raw joystick input
-        float forwardStick = -gamepad1.left_stick_y;
+        float forwardStick = gamepad1.left_stick_y;
         float turnStick = -gamepad1.right_stick_x;
-/*
-        boolean shootOut = gamepad1.right_bumper;
-        float shootOutFast = gamepad1.right_trigger;
-        boolean sweepIn = gamepad1.left_bumper;
-        float sweepOut = gamepad1.left_trigger;
-*/
-
-        float newLeftEncoder = 0;
-        float oldLeftEncoder = 0;
-        float newRightEncoder = 0;
-        float oldRightEncoder = 0;
 
         telemetry.addData("ForwardStick", forwardStick);
         telemetry.addData("TurnStick", turnStick);
@@ -187,7 +129,6 @@ public class FPSTeleOp extends OpMode
         leftPower -= amountOverMax;
         rightPower -= amountOverMax;
 
-
         leftMotor.setPower(leftPower);
         telemetry.addData("LeftPower", leftPower);
         rightMotor.setPower(rightPower);
@@ -196,66 +137,48 @@ public class FPSTeleOp extends OpMode
         telemetry.addData("ForwardPower", forwardPower);
         telemetry.addData("TurnPower", turnPower);
 
-        // eg: Run wheels in tank mode (note: The joystick goes negative when pushed forwards)
-        // leftMotor.setPower(-gamepad1.left_stick_y);
-        // rightMotor.setPower(-gamepad1.right_stick_y);
 
-      /*
-        if (sweepIn) {
-            telemetry.addData("SweepIn", sweepIn);
-            telemetry.update();
-            sweep.setPower(1);
-        } else if (sweepOut > 0) {
-            sweep.setPower(-1);
-        } else {
-            sweep.setPower(0);
+        if (gamepad1.left_trigger > 0) {
+            armMotor.setPower(1);
+        }
+        else if (gamepad1.right_trigger > 0) {
+            armMotor.setPower(-1);
+        }
+        else {
+            armMotor.setPower(0);
         }
 
-        if (shootOut) {
-            spin1.setPower(currentPower);
-            spin2.setPower(currentPower);
-
-            double RPM = (((newLeftEncoder - oldLeftEncoder) + (newRightEncoder - oldRightEncoder)) / 2) / (runtime.seconds() / 60);
-            if (RPM > FLYWHEEL_IDLE_SPEED) {
-                currentPower -= 0.02;
-            } else {
-                currentPower += 0.02;
-            }
-        } else {
-            currentPower = 0.5f;
-            spin1.setPower(spin1.getPower() * 0.98);
-            spin2.setPower(spin2.getPower() * 0.98);
+        if (!toggleGrab && doToggleGrab && gamepad1.a) {
+            leftGrab.setPosition(0.05);
+            rightGrab.setPosition(0.05);
+            toggleGrab = true;
+            doToggleGrab = false;
+        }
+        else if (toggleGrab && doToggleGrab && gamepad1.a) {
+            leftGrab.setPosition(1);
+            rightGrab.setPosition(1);
+            toggleGrab = false;
+            doToggleGrab = false;
+        }
+        else if (!gamepad1.a) {
+            doToggleGrab = true;
         }
 
-        if (gamepad1.x) {
-            pushLeft.setPosition(0);
-        } else if (gamepad1.b) {
-            pushLeft.setPosition(1);
-        } else {
-            pushLeft.setPosition(0.5);
+        /*
+        if (!toggleGolf && doToggleGolf && gamepad1.b) {
+            golf.setPosition(1);
+            toggleGolf = true;
+            doToggleGolf = false;
         }
-
-        if (gamepad1.dpad_left) {
-            pushRight.setPosition(0);
-        } else if (gamepad1.dpad_right) {
-            pushRight.setPosition(1);
-        } else {
-            pushRight.setPosition(0.5);
+        else if (toggleGolf && doToggleGolf && gamepad1.b) {
+            golf.setPosition(0.55);
+            toggleGolf = false;
+            doToggleGolf = false;
         }
-
-        if (gamepad1.y) {
-            arm.setPower(1);
-        } else if (gamepad1.a) {
-            arm.setPower(-1);
-        } else {
-            arm.setPower(0);
+        else if (!gamepad1.b) {
+            doToggleGolf = true;
         }
-
-        if (gamepad1.dpad_up) {
-            liftLock.setPosition(0);
-        } else {
-            liftLock.setPosition(1);
-        }*/
+        */
 
     }
 }
