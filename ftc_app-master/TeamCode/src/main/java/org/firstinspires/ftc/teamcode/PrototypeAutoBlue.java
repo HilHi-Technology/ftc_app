@@ -34,14 +34,74 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
-@Autonomous(name="Regular Auto", group ="Autonomous")
-public class RegularAuto extends EnhancedLinearOpMode {
+@Autonomous(name="Prototype Auto Blue", group ="Autonomous")
+public class PrototypeAutoBlue extends EnhancedLinearOpMode {
 
     @Override
     public void startOpMode() {
-        leftMotor.setPower(1);
-        rightMotor.setPower(1);
-        sleep(3000);
+
+        golf.setPosition(0.75);
+        sleep(1000);
+        golf.setPosition(0.60);
+        sleep(1000);
+        golf.setPosition(0.50);
+        sleep(2000);
+
+        while (opModeIsActive() && (color.red() < redCheck) && (color.blue() < blueCheck)) {
+            telemetry.addData("Red", color.red());
+            telemetry.addData("Blue", color.blue());
+            telemetry.update();
+        }
+
+        if (color.red() >= redCheck) {
+            rightMotor.setPower(0.3);
+            leftMotor.setPower(-0.3);
+            sleep(300);
+            rightMotor.setPower(0);
+            leftMotor.setPower(0);
+
+            sleep(1000);
+            golf.setPosition(1);
+            sleep(1000);
+
+            rightMotor.setPower(-0.3);
+            leftMotor.setPower(0.3);
+            sleep(300);
+            rightMotor.setPower(0);
+            leftMotor.setPower(0);
+            sleep(300);
+        }
+        else if (color.blue() >= blueCheck) {
+            rightMotor.setPower(-0.3);
+            leftMotor.setPower(0.3);
+            sleep(300);
+            rightMotor.setPower(0);
+            leftMotor.setPower(0);
+
+            sleep(1000);
+            golf.setPosition(1);
+            sleep(1000);
+
+            rightMotor.setPower(0.3);
+            leftMotor.setPower(-0.3);
+            sleep(300);
+            rightMotor.setPower(0);
+            leftMotor.setPower(0);
+            sleep(300);
+        }
+
+        // Blue far
+
+        leftMotor.setPower(-0.3);
+        rightMotor.setPower(0.3);
+        sleep(200);
+        leftMotor.setPower(0);
+        rightMotor.setPower(0);
+
+
+        leftMotor.setPower(0.5);
+        rightMotor.setPower(0.5);
+        sleep(5000);
         leftMotor.setPower(-1);
         rightMotor.setPower(-1);
         sleep(300);

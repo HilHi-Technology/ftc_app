@@ -34,8 +34,8 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
-@Autonomous(name="Prototype Auto", group ="Autonomous")
-public class PrototypeAuto extends EnhancedLinearOpMode {
+@Autonomous(name="Prototype Auto Red", group ="Autonomous")
+public class PrototypeAutoRed extends EnhancedLinearOpMode {
 
     @Override
     public void startOpMode() {
@@ -54,8 +54,8 @@ public class PrototypeAuto extends EnhancedLinearOpMode {
         }
 
         if (color.red() >= redCheck) {
-            rightMotor.setPower(0.3);
-            leftMotor.setPower(-0.3);
+            rightMotor.setPower(-0.3);
+            leftMotor.setPower(0.3);
             sleep(300);
             rightMotor.setPower(0);
             leftMotor.setPower(0);
@@ -64,16 +64,16 @@ public class PrototypeAuto extends EnhancedLinearOpMode {
             golf.setPosition(1);
             sleep(1000);
 
-            rightMotor.setPower(-0.3);
-            leftMotor.setPower(0.3);
+            rightMotor.setPower(0.3);
+            leftMotor.setPower(-0.3);
             sleep(300);
             rightMotor.setPower(0);
             leftMotor.setPower(0);
             sleep(300);
         }
         else if (color.blue() >= blueCheck) {
-            rightMotor.setPower(-0.3);
-            leftMotor.setPower(0.3);
+            rightMotor.setPower(0.3);
+            leftMotor.setPower(-0.3);
             sleep(300);
             rightMotor.setPower(0);
             leftMotor.setPower(0);
@@ -82,8 +82,8 @@ public class PrototypeAuto extends EnhancedLinearOpMode {
             golf.setPosition(1);
             sleep(1000);
 
-            rightMotor.setPower(0.3);
-            leftMotor.setPower(-0.3);
+            rightMotor.setPower(-0.3);
+            leftMotor.setPower(0.3);
             sleep(300);
             rightMotor.setPower(0);
             leftMotor.setPower(0);

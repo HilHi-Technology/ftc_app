@@ -164,7 +164,6 @@ public class FPSTeleOp extends OpMode
             doToggleGrab = true;
         }
 
-        /*
         if (!toggleGolf && doToggleGolf && gamepad1.b) {
             golf.setPosition(1);
             toggleGolf = true;
@@ -178,7 +177,5 @@ public class FPSTeleOp extends OpMode
         else if (!gamepad1.b) {
             doToggleGolf = true;
         }
-        */
-
     }
 }
